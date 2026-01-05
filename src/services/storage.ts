@@ -10,7 +10,8 @@ const INITIAL_DATA: CompassData = {
   shippedTickets: [],
   users: [],
   organizations: [],
-  standupHistory: []
+  standupHistory: [],
+  notifications: []
 };
 
 // Helper: Simulate delay for realistic feeling ?? No, local should be instant. 

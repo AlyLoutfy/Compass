@@ -1,21 +1,25 @@
 import React, { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ClipboardList, ChevronDown, X } from 'lucide-react';
+import { ClipboardList, ChevronDown } from 'lucide-react';
 import { useData } from '@/context/DataContext';
 import { Ticket, TicketStatus } from '@/types';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/Select';
-import { AlertCircle, CheckCircle2, Circle, Loader2, Package, PauseCircle, Rocket, Plus, LayoutGrid, List, Pencil } from 'lucide-react';
+import { format } from 'date-fns';
+import { AlertCircle, CheckCircle2, Circle, Loader2, Package, PauseCircle, Rocket, Plus, LayoutGrid, List, Pencil, Download, Eye } from 'lucide-react';
 import { TicketDetailsDialog } from '@/components/team/TicketDetailsDialog';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { PageToolbar } from '@/components/layout/PageToolbar';
+import { FilterPopover } from '@/components/ui/FilterPopover';
+import { exportToExcel } from '@/lib/excel';
 
 const COLUMN_CONFIG: { id: TicketStatus; label: string; icon: any; color: string }[] = [
   { id: 'backlog', label: 'Backlog', icon: Package, color: 'text-slate-500' },
-  { id: 'in_sprint', label: 'Sprint', icon: Circle, color: 'text-blue-500' },
+  { id: 'todo', label: 'Todo', icon: Circle, color: 'text-zinc-500' },
   { id: 'in_progress', label: 'In Progress', icon: Loader2, color: 'text-amber-500' },
+  { id: 'in_review', label: 'In Review', icon: Eye, color: 'text-blue-500' },
   { id: 'ready_for_qa', label: 'Ready for QA', icon: AlertCircle, color: 'text-purple-500' },
   { id: 'done', label: 'Done', icon: CheckCircle2, color: 'text-emerald-500' },
   { id: 'blocked', label: 'Blocked', icon: PauseCircle, color: 'text-red-500' },
@@ -70,8 +74,9 @@ export const TicketsBoard = () => {
   const columns = useMemo(() => {
     const cols: Record<string, Ticket[]> = {
       backlog: [],
-      in_sprint: [],
+      todo: [],
       in_progress: [],
+      in_review: [],
       blocked: [],
       ready_for_qa: [],
       done: [],
@@ -79,7 +84,8 @@ export const TicketsBoard = () => {
     };
     filteredTickets.forEach(t => {
       // Handle potential legacy statuses or mismatches if any
-      const status = t.status || 'backlog';
+      let status = t.status || 'backlog';
+      if (status === 'in_sprint') status = 'todo';
       if (cols[status]) cols[status].push(t);
     });
     return cols;
@@ -92,7 +98,14 @@ export const TicketsBoard = () => {
       if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
       const newStatus = destination.droppableId as TicketStatus;
-      actions.moveTicket(draggableId, newStatus);
+      
+      const updates: Partial<Ticket> = { status: newStatus };
+      // If moving to backlog, remove from sprint
+      if (newStatus === 'backlog') {
+          updates.sprintId = undefined;
+      }
+
+      actions.updateTicket(draggableId, updates);
   };
 
   const handleSaveTicket = (ticketData: Partial<Ticket>) => {
@@ -132,90 +145,92 @@ export const TicketsBoard = () => {
                 count={filteredTickets.length}
                 countLabel="Tickets"
                 filters={
-                    <>
-                      <motion.div layout className="relative" transition={{ type: "spring", bounce: 0, duration: 0.3 }}>
-                         <Select value={filterPriority} onValueChange={setFilterPriority}>
-                            <SelectTrigger className="h-8 text-xs border-dashed border-zinc-300 dark:border-zinc-700 shadow-none hover:bg-zinc-50 dark:hover:bg-zinc-800 w-auto min-w-[120px] px-2.5 transition-none">
-                              <span className="truncate capitalize">{filterPriority === 'all' ? 'Priority: All' : `Priority: ${filterPriority}`}</span>
-                            </SelectTrigger>
-                             <SelectContent>
-                                <SelectItem value="all">All Priorities</SelectItem>
-                                <SelectItem value="critical">Critical</SelectItem>
-                                <SelectItem value="high">High</SelectItem>
-                                <SelectItem value="medium">Medium</SelectItem>
-                                <SelectItem value="low">Low</SelectItem>
-                             </SelectContent>
-                          </Select>
-                          <AnimatePresence>
-                          {filterPriority !== 'all' && (
-                            <motion.button
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.5 }}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setFilterPriority('all');
-                                }}
-                                className="absolute -top-1.5 -right-1.5 h-4 w-4 bg-zinc-500 hover:bg-zinc-600 text-white rounded-full flex items-center justify-center shadow-sm z-10 transition-colors"
-                            >
-                                <X size={10} strokeWidth={3} />
-                            </motion.button>
-                          )}
-                          </AnimatePresence>
-                      </motion.div>
+                      <FilterPopover
+                        title="Filter Tickets"
+                        activeCount={
+                            (filterPriority !== 'all' ? 1 : 0) + 
+                            (filterUser !== 'all' ? 1 : 0)
+                        }
+                        onReset={() => {
+                            setFilterPriority('all');
+                            setFilterUser('all');
+                        }}
+                      >
+                         <div className="space-y-4">
+                             <div className="space-y-1.5">
+                                 <label className="text-xs font-semibold text-muted-foreground uppercase">Priority</label>
+                                 <Select value={filterPriority} onValueChange={setFilterPriority}>
+                                    <SelectTrigger className="h-9 w-full">
+                                      <span className="truncate capitalize">{filterPriority === 'all' ? 'All Priorities' : filterPriority}</span>
+                                    </SelectTrigger>
+                                     <SelectContent>
+                                        <SelectItem value="all">All Priorities</SelectItem>
+                                        <SelectItem value="critical">Critical</SelectItem>
+                                        <SelectItem value="high">High</SelectItem>
+                                        <SelectItem value="medium">Medium</SelectItem>
+                                        <SelectItem value="low">Low</SelectItem>
+                                     </SelectContent>
+                                  </Select>
+                             </div>
 
-                      <motion.div layout className="relative" transition={{ type: "spring", bounce: 0, duration: 0.3 }}>
-                         <Select value={filterUser} onValueChange={setFilterUser}>
-                            <SelectTrigger className="h-8 text-xs border-dashed border-zinc-300 dark:border-zinc-700 shadow-none hover:bg-zinc-50 dark:hover:bg-zinc-800 w-auto min-w-[120px] px-2.5 transition-none">
-                              <span className="truncate capitalize">
-                                {filterUser === 'all' 
-                                    ? 'User: All' 
-                                    : `User: ${data.users.find(u => u.id === filterUser)?.name || filterUser}`
-                                }
-                              </span>
-                            </SelectTrigger>
-                             <SelectContent>
-                                <SelectItem value="all">All Users</SelectItem>
-                                {data.users.map(u => (
-                                    <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                                ))}
-                             </SelectContent>
-                          </Select>
-                          <AnimatePresence>
-                          {filterUser !== 'all' && (
-                            <motion.button
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.5 }}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setFilterUser('all');
-                                }}
-                                className="absolute -top-1.5 -right-1.5 h-4 w-4 bg-zinc-500 hover:bg-zinc-600 text-white rounded-full flex items-center justify-center shadow-sm z-10 transition-colors"
-                            >
-                                <X size={10} strokeWidth={3} />
-                            </motion.button>
-                          )}
-                          </AnimatePresence>
-                      </motion.div>
-                    </>
+                             <div className="space-y-1.5">
+                                 <label className="text-xs font-semibold text-muted-foreground uppercase">Assignee</label>
+                                 <Select value={filterUser} onValueChange={setFilterUser}>
+                                    <SelectTrigger className="h-9 w-full">
+                                      <span className="truncate capitalize">
+                                        {filterUser === 'all' 
+                                            ? 'All Users' 
+                                            : (data.users.find(u => u.id === filterUser)?.name || filterUser)
+                                        }
+                                      </span>
+                                    </SelectTrigger>
+                                     <SelectContent>
+                                        <SelectItem value="all">All Users</SelectItem>
+                                        {data.users.map(u => (
+                                            <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                                        ))}
+                                     </SelectContent>
+                                  </Select>
+                             </div>
+                         </div>
+                      </FilterPopover>
                 }
                 actions={
                     <>
-                        <div className="flex items-center bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1 mr-2">
+                        <div className="flex items-center bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1 mr-2 h-8">
                              <button 
                                  onClick={() => setViewMode('board')}
-                                 className={`p-1.5 rounded-md transition-all ${viewMode === 'board' ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
+                                 className={`p-1 rounded-md transition-all ${viewMode === 'board' ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
                              >
                                  <LayoutGrid size={16} />
                              </button>
                              <button 
                                  onClick={() => setViewMode('list')}
-                                 className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
+                                 className={`p-1 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
                              >
                                  <List size={16} />
                              </button>
                         </div>
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 text-xs rounded-lg mr-2"
+                            onClick={() => {
+                                const exportData = filteredTickets.map(t => ({
+                                    ID: t.id,
+                                    Title: t.title,
+                                    Status: COLUMN_CONFIG.find(c => c.id === t.status)?.label || t.status,
+                                    Priority: t.priority.charAt(0).toUpperCase() + t.priority.slice(1),
+                                    Assignee: getUserName(t.assignee) || 'Unassigned',
+                                    Created: format(new Date(t.createdAt), 'dd/MM/yyyy'),
+                                    Description: t.description || ''
+                                }));
+                                exportToExcel(exportData, 'Compass_Tickets');
+                            }}
+                        >
+                            <Download className="w-3.5 h-3.5 mr-2" />
+                            Export
+                        </Button>
                         <Button size="sm" onClick={openNewTicketModal} className="h-8 text-xs rounded-lg">
                             <Plus className="w-3.5 h-3.5 mr-2" />
                             New Ticket
@@ -415,11 +430,8 @@ const TicketCard = ({ ticket, assigneeName, onEdit }: { ticket: Ticket; assignee
    return (
        <Card 
             className="shadow-sm hover:shadow-md transition-all duration-200 bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 ring-1 ring-slate-900/5 dark:ring-white/10 group cursor-default"
-            onClick={(e) => {
-                if (e.detail === 2 && onEdit) {
-                    e.preventDefault();
-                    onEdit();
-                }
+            onClick={() => {
+                if (onEdit) onEdit();
             }}
        >
           <CardContent className="p-2.5 space-y-2 relative">

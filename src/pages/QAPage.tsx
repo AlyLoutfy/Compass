@@ -1,19 +1,22 @@
 
 import { useState } from 'react';
 import { useData } from '@/context/DataContext';
-import { AnimatePresence, motion } from 'framer-motion';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { CheckCircle2, XCircle, X } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageToolbar } from '@/components/layout/PageToolbar';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/Select';
+import { FilterPopover } from '@/components/ui/FilterPopover';
+import { TicketDetailsDialog } from '@/components/team/TicketDetailsDialog';
+import { Ticket } from '@/types';
 
 export const QAPage = () => {
   const { data, actions } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
   const qaTickets = data.tickets
     .filter(t => t.status === 'ready_for_qa')
@@ -28,15 +31,24 @@ export const QAPage = () => {
       return true;
     });
 
-  const handlePass = (id: string) => {
+  const handlePass = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     actions.moveTicket(id, 'done');
   };
 
-  const handleFail = (id: string) => {
+  const handleFail = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     // Ideally open modal for notes, but for now instant reject to In Progress
     if (confirm("Reject ticket back to development?")) {
         actions.moveTicket(id, 'in_progress'); 
     }
+  };
+
+  const handleSaveTicket = (updates: Partial<Ticket>) => {
+      if (selectedTicket) {
+          actions.updateTicket(selectedTicket.id, updates);
+          setSelectedTicket(null);
+      }
   };
 
   return (
@@ -50,38 +62,29 @@ export const QAPage = () => {
             count={qaTickets.length}
             countLabel="Tickets"
             filters={
-              <div className="flex items-center gap-2">
-                  <motion.div layout className="relative" transition={{ type: "spring", bounce: 0, duration: 0.3 }}>
-                    <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                        <SelectTrigger className="h-8 text-xs border-dashed border-zinc-300 dark:border-zinc-700 shadow-none hover:bg-zinc-50 dark:hover:bg-zinc-800 w-auto min-w-[120px] px-2.5 transition-none">
-                            <span className="truncate capitalize">{priorityFilter === 'all' ? 'Priority: All' : `Priority: ${priorityFilter}`}</span>
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Priorities</SelectItem>
-                            <SelectItem value="critical">Critical</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="low">Low</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <AnimatePresence>
-                    {priorityFilter !== 'all' && (
-                        <motion.button
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.5 }}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setPriorityFilter('all');
-                            }}
-                            className="absolute -top-1.5 -right-1.5 h-4 w-4 bg-zinc-500 hover:bg-zinc-600 text-white rounded-full flex items-center justify-center shadow-sm z-10 transition-colors"
-                        >
-                            <X size={10} strokeWidth={3} />
-                        </motion.button>
-                    )}
-                    </AnimatePresence>
-                  </motion.div>
-              </div>
+              <FilterPopover
+                title="Filter QA"
+                activeCount={priorityFilter !== 'all' ? 1 : 0}
+                onReset={() => setPriorityFilter('all')}
+              >
+                  <div className="space-y-4">
+                      <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase">Priority</label>
+                          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                              <SelectTrigger className="h-9 w-full">
+                                  <span className="truncate capitalize">{priorityFilter === 'all' ? 'All Priorities' : priorityFilter}</span>
+                              </SelectTrigger>
+                              <SelectContent>
+                                  <SelectItem value="all">All Priorities</SelectItem>
+                                  <SelectItem value="critical">Critical</SelectItem>
+                                  <SelectItem value="high">High</SelectItem>
+                                  <SelectItem value="medium">Medium</SelectItem>
+                                  <SelectItem value="low">Low</SelectItem>
+                              </SelectContent>
+                          </Select>
+                      </div>
+                  </div>
+              </FilterPopover>
             }
         />
       </div>
@@ -95,7 +98,11 @@ export const QAPage = () => {
            />
         ) : (
           qaTickets.map((ticket) => (
-            <Card key={ticket.id} className="overflow-hidden">
+            <Card 
+                key={ticket.id} 
+                className="overflow-hidden cursor-pointer hover:bg-muted/50 transition-colors group"
+                onClick={() => setSelectedTicket(ticket)}
+            >
                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 gap-4">
                   <div className="space-y-1">
                      <div className="flex items-center gap-2">
@@ -108,7 +115,7 @@ export const QAPage = () => {
                         }`}>{ticket.priority}</Badge>
                         <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 border-0">Ready for QA</Badge>
                      </div>
-                     <h3 className="text-lg font-semibold">{ticket.title}</h3>
+                     <h3 className="text-lg font-semibold group-hover:text-primary transition-colors">{ticket.title}</h3>
                      <p className="text-sm text-muted-foreground max-w-2xl">{ticket.description}</p>
                   </div>
                   
@@ -116,14 +123,14 @@ export const QAPage = () => {
                      <Button 
                         variant="outline" 
                         className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                        onClick={() => handleFail(ticket.id)}
+                        onClick={(e) => handleFail(ticket.id, e)}
                      >
                         <XCircle className="mr-2 h-4 w-4" />
                         Reject
                      </Button>
                      <Button 
                         className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                        onClick={() => handlePass(ticket.id)}
+                        onClick={(e) => handlePass(ticket.id, e)}
                      >
                         <CheckCircle2 className="mr-2 h-4 w-4" />
                         Approve
@@ -134,6 +141,13 @@ export const QAPage = () => {
           ))
         )}
       </div>
+
+      <TicketDetailsDialog 
+        isOpen={!!selectedTicket}
+        onClose={() => setSelectedTicket(null)}
+        ticket={selectedTicket}
+        onSave={handleSaveTicket}
+      />
     </div>
   );
 };

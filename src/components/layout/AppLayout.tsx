@@ -11,16 +11,17 @@ import {
   Users,
   ClipboardList,
   Palette,
-  Building2
+  Building2,
+  Layers
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/Button';
 import { ThemeToggle } from '../ui/ThemeToggle';
 
-
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip } from '../ui/Tooltip';
+import { NotificationPopover } from '../notifications/NotificationPopover';
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -38,11 +39,12 @@ export const AppLayout: React.FC<SidebarProps> = ({ children }) => {
     { icon: Lightbulb, label: 'Ideas', path: '/ideas' },
     { icon: ClipboardList, label: 'Client Requirements', path: '/requirements' },
     { icon: Ticket, label: 'Tickets', path: '/tickets' },
+    { icon: Layers, label: 'Sprints', path: '/sprints' },
     { icon: CheckCircle2, label: 'QA', path: '/qa' },
     { icon: Rocket, label: 'Releases', path: '/releases' },
+    { icon: Building2, label: 'Organizations', path: '/organizations' },
     { icon: Users, label: 'Users', path: '/users' },
     { icon: Palette, label: 'Design', path: '/design' },
-    { icon: Building2, label: 'Organizations', path: '/organizations' },
   ];
 
   return (
@@ -58,6 +60,7 @@ export const AppLayout: React.FC<SidebarProps> = ({ children }) => {
           Compass
         </div>
         <div className="flex items-center gap-2">
+            <NotificationPopover />
             <ThemeToggle />
             <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(true)}>
             <Menu />
@@ -288,7 +291,10 @@ export const AppLayout: React.FC<SidebarProps> = ({ children }) => {
                                     <span className="text-sm font-medium truncate">Workspace</span>
                                     <span className="text-xs text-muted-foreground truncate">Founder</span>
                                 </div>
-                                <ThemeToggle />
+                                <div className="flex items-center gap-1">
+                                  <NotificationPopover />
+                                  <ThemeToggle />
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -300,8 +306,9 @@ export const AppLayout: React.FC<SidebarProps> = ({ children }) => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 10 }}
-                            className="mt-4 flex justify-center"
+                            className="mt-4 flex flex-col items-center gap-2 justify-center"
                         >
+                            <NotificationPopover />
                             <ThemeToggle />
                         </motion.div>
                     )}

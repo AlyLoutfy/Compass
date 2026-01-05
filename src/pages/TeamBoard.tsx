@@ -10,6 +10,7 @@ import { LayoutGrid, List, History as HistoryIcon, Activity } from 'lucide-react
 import { HeroDatePicker } from '../components/ui/HeroDatePicker';
 import { DateRange } from "react-day-picker";
 import { motion, AnimatePresence } from 'framer-motion';
+import { PageToolbar } from '../components/layout/PageToolbar';
 
 
 import { cn } from '@/lib/utils';
@@ -48,89 +49,93 @@ export const TeamBoard: React.FC = () => {
 
     return (
         <div className="flex flex-col">
-            <header className="pt-4 md:pt-8 pb-4 flex flex-row items-center justify-between gap-4">
-                <h1 className="text-3xl font-bold tracking-tight shrink-0">Dashboard</h1>
-                
-                <div className="flex items-center gap-2">
-                    {/* Standup History Button */}
-                    {isStandupMode && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setIsHistoryOpen(true)}
-                            className="text-muted-foreground hover:text-foreground flex gap-2"
-                        >
-                            <HistoryIcon size={16} />
-                            Past Standups
-                        </Button>
-                    )}
+            <div className="pt-4 md:pt-8">
+                <PageToolbar 
+                    title="Dashboard"
+                    filters={
+                        <div className="flex items-center gap-2">
+                            {/* Standup History Button */}
+                            {isStandupMode && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setIsHistoryOpen(true)}
+                                    className="text-muted-foreground hover:text-foreground flex gap-2 h-9"
+                                >
+                                    <HistoryIcon size={16} />
+                                    Past Standups
+                                </Button>
+                            )}
 
-                    {!isStandupMode && (
-                        <>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                            {!isStandupMode && (
+                                <>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                                        className={cn(
+                                            "text-muted-foreground hover:text-foreground flex gap-2 h-9",
+                                            isSidebarOpen && "text-foreground bg-zinc-100 dark:bg-zinc-800"
+                                        )}
+                                    >
+                                        <Activity size={16} />
+                                        Activity
+                                    </Button>
+
+                                    <div className="h-4 w-[1px] bg-border mx-1" />
+
+                                    <HeroDatePicker 
+                                        date={dateRange}
+                                        setDate={setDateRange}
+                                    />
+                                </>
+                            )}
+                        </div>
+                    }
+                    actions={
+                        <div className="flex items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-md h-9 shrink-0">
+                            <button
+                                onClick={() => setIsStandupMode(false)}
                                 className={cn(
-                                    "text-muted-foreground hover:text-foreground flex gap-2",
-                                    isSidebarOpen && "text-foreground bg-zinc-100 dark:bg-zinc-800"
+                                    "relative flex items-center gap-2 px-3 text-xs font-semibold rounded-sm transition-colors h-7",
+                                    !isStandupMode ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
-                                <Activity size={16} />
-                                Activity
-                            </Button>
-
-                            <div className="h-4 w-[1px] bg-border mx-1" />
-
-                            <HeroDatePicker 
-                                date={dateRange}
-                                setDate={setDateRange}
-                            />
-                        </>
-                    )}
-
-                    <div className="flex items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-md h-9">
-                        <button
-                            onClick={() => setIsStandupMode(false)}
-                            className={cn(
-                                "relative flex items-center gap-2 px-3 text-xs font-semibold rounded-sm transition-colors h-7",
-                                !isStandupMode ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                            )}
-                        >
-                            {!isStandupMode && (
-                                <motion.div
-                                    layoutId="view-toggle"
-                                    className="absolute inset-0 bg-white dark:bg-zinc-950 shadow-sm rounded-sm ring-1 ring-black/5 dark:ring-white/10"
-                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                />
-                            )}
-                            <span className="relative z-10 flex items-center gap-2">
-                                <LayoutGrid size={14} />
-                                Board
-                            </span>
-                        </button>
-                        <button
-                            onClick={() => setIsStandupMode(true)}
-                            className={cn(
-                                "relative flex items-center gap-2 px-3 text-xs font-semibold rounded-sm transition-colors h-7",
-                                isStandupMode ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                            )}
-                        >
-                            {isStandupMode && (
-                                <motion.div
-                                    layoutId="view-toggle"
-                                    className="absolute inset-0 bg-white dark:bg-zinc-950 shadow-sm rounded-sm ring-1 ring-black/5 dark:ring-white/10"
-                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                />
-                            )}
-                            <span className="relative z-10 flex items-center gap-2">
-                                <List size={14} />
-                                Standup
-                            </span>
-                        </button>
-                    </div>
-                </div>
-            </header>
+                                {!isStandupMode && (
+                                    <motion.div
+                                        layoutId="view-toggle"
+                                        className="absolute inset-0 bg-white dark:bg-zinc-950 shadow-sm rounded-sm ring-1 ring-black/5 dark:ring-white/10"
+                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    />
+                                )}
+                                <span className="relative z-10 flex items-center gap-2">
+                                    <LayoutGrid size={14} />
+                                    Board
+                                </span>
+                            </button>
+                            <button
+                                onClick={() => setIsStandupMode(true)}
+                                className={cn(
+                                    "relative flex items-center gap-2 px-3 text-xs font-semibold rounded-sm transition-colors h-7",
+                                    isStandupMode ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                {isStandupMode && (
+                                    <motion.div
+                                        layoutId="view-toggle"
+                                        className="absolute inset-0 bg-white dark:bg-zinc-950 shadow-sm rounded-sm ring-1 ring-black/5 dark:ring-white/10"
+                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    />
+                                )}
+                                <span className="relative z-10 flex items-center gap-2">
+                                    <List size={14} />
+                                    Standup
+                                </span>
+                            </button>
+                        </div>
+                    }
+                />
+            </div>
 
             <div className={cn("flex items-start mt-4", isSidebarOpen && !isStandupMode ? "gap-8" : "")}>
                 <main className="flex-1 min-w-0 space-y-4">

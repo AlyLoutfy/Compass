@@ -98,19 +98,21 @@ export const FilterPopover: React.FC<FilterPopoverProps> = ({ title = "Filters",
             <AnimatePresence>
                 {activeCount !== undefined && activeCount > 0 && onReset && (
                     <motion.button
-                        initial={{ opacity: 0, scale: 0.9, width: 0 }}
-                        animate={{ opacity: 1, scale: 1, width: "auto" }}
-                        exit={{ opacity: 0, scale: 0.9, width: 0 }}
-                        transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+                        initial={{ opacity: 0, width: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, width: "auto", scale: 1 }}
+                        exit={{ opacity: 0, width: 0, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
                         onClick={(e) => {
                             e.stopPropagation();
                             onReset();
                         }}
-                        className="h-7 pl-2 pr-1.5 ml-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full border border-dashed border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors overflow-hidden whitespace-nowrap"
+                        className="h-7 ml-1 flex items-center justify-center text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full border border-dashed border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors overflow-hidden"
                         title="Clear filters"
                     >
-                        <span>Clear</span>
-                        <X size={12} />
+                        <div className="flex items-center gap-1.5 px-2 whitespace-nowrap">
+                            <span>Clear</span>
+                            <X size={12} />
+                        </div>
                     </motion.button>
                 )}
             </AnimatePresence>

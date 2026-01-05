@@ -5,8 +5,8 @@ import { LayoutGroup } from 'framer-motion';
 
 interface PageToolbarProps {
     title: string;
-    searchQuery: string;
-    onSearchChange: (value: string) => void;
+    searchQuery?: string;
+    onSearchChange?: (value: string) => void;
     searchPlaceholder?: string;
     count?: number;
     countLabel?: string;
@@ -16,7 +16,7 @@ interface PageToolbarProps {
 
 export const PageToolbar = ({
     title,
-    searchQuery,
+    searchQuery = "",
     onSearchChange,
     searchPlaceholder = "Search...",
     count,
@@ -35,25 +35,27 @@ export const PageToolbar = ({
             <div className="h-4 w-[1px] bg-zinc-200 dark:bg-zinc-700 mx-1 shrink-0" />
 
             {/* Search */}
-            <div className="flex items-center gap-2 px-2 w-full sm:w-[240px] lg:w-[320px] shrink-0 transition-all">
-                <Search className="w-4 h-4 text-muted-foreground shrink-0" />
-                <input
-                    className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground/70 h-9 min-w-0"
-                    placeholder={searchPlaceholder}
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                />
-                {searchQuery && (
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-6 w-6 p-0 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full" 
-                        onClick={() => onSearchChange('')}
-                    >
-                        <Plus className="rotate-45" size={14} />
-                    </Button>
-                )}
-            </div>
+            {onSearchChange && (
+                <div className="flex items-center gap-2 px-2 w-full sm:w-[240px] lg:w-[320px] shrink-0 transition-all">
+                    <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <input
+                        className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground/70 h-9 min-w-0"
+                        placeholder={searchPlaceholder}
+                        value={searchQuery}
+                        onChange={(e) => onSearchChange(e.target.value)}
+                    />
+                    {searchQuery && (
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full" 
+                            onClick={() => onSearchChange('')}
+                        >
+                            <Plus className="rotate-45" size={14} />
+                        </Button>
+                    )}
+                </div>
+            )}
 
             <div className="flex-1 min-w-4" />
 

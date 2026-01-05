@@ -30,7 +30,8 @@
     "tailwind-merge": "^2.2.1",
     "tailwind-variants": "^3.2.2",
     "tailwindcss-animate": "^1.0.7",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",

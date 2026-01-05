@@ -1,6 +1,6 @@
 export type Priority = 'critical' | 'high' | 'medium' | 'low';
 export type IdeaStatus = 'pending' | 'approved' | 'rejected' | 'needs_clarification';
-export type TicketStatus = 'backlog' | 'in_sprint' | 'in_progress' | 'blocked' | 'ready_for_qa' | 'done' | 'shipped';
+export type TicketStatus = 'backlog' | 'in_sprint' | 'todo' | 'in_progress' | 'in_review' | 'blocked' | 'ready_for_qa' | 'done' | 'shipped';
 export type TicketType = 'feature' | 'improvement' | 'bug';
 export type SourceType = 'client' | 'internal';
 
@@ -128,6 +128,18 @@ export interface CompassData {
   organizations: Organization[];
   shippedTickets: Ticket[]; // Archive
   standupHistory: StandupReport[];
+  notifications: Notification[];
+}
+
+export interface Notification {
+  id: string;
+  userId: string; // Who receives it
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  isRead: boolean;
+  timestamp: number;
+  link?: string;
 }
 
 export interface StandupAttendeeSnapshot {

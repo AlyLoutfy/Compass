@@ -9,8 +9,9 @@ import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { Plus, ArrowRight, ChevronLeft, ChevronRight, Pencil, MessageSquare, Lightbulb, Send, ChevronDown, ClipboardList, ArrowUpDown, ArrowUp, ArrowDown, X } from 'lucide-react';
+import { Plus, ArrowRight, ChevronLeft, ChevronRight, Pencil, MessageSquare, Lightbulb, Send, ChevronDown, ClipboardList, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { PageToolbar } from '@/components/layout/PageToolbar';
+import { FilterPopover } from '@/components/ui/FilterPopover';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { MultiSelectDropdown } from '@/components/ui/MultiSelectDropdown';
@@ -168,58 +169,50 @@ export const IdeasBoard = () => {
             count={filteredIdeas.length}
             countLabel="Ideas"
             filters={
-              <>
-                  <motion.div layout className="relative" transition={{ type: "spring", bounce: 0, duration: 0.3 }}>
-                     <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                        <SelectTrigger className="h-8 text-xs border-dashed border-zinc-300 dark:border-zinc-700 shadow-none hover:bg-zinc-50 dark:hover:bg-zinc-800 w-auto min-w-[120px] px-2.5 transition-none">
-                          <span className="truncate capitalize">{priorityFilter === 'all' ? 'Priority: All' : `Priority: ${priorityFilter}`}</span>
-                        </SelectTrigger>
-                         <SelectContent>
-                            <SelectItem value="all">All Priorities</SelectItem>
-                            <SelectItem value="critical">Critical</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="low">Low</SelectItem>
-                         </SelectContent>
-                      </Select>
-                      {priorityFilter !== 'all' && (
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setPriorityFilter('all');
-                            }}
-                            className="absolute -top-1.5 -right-1.5 h-4 w-4 bg-zinc-500 hover:bg-zinc-600 text-white rounded-full flex items-center justify-center shadow-sm z-10 transition-colors"
-                        >
-                            <X size={10} strokeWidth={3} />
-                        </button>
-                      )}
-                  </motion.div>
+                  <FilterPopover
+                    title="Filter Ideas"
+                    activeCount={
+                        (priorityFilter !== 'all' ? 1 : 0) + 
+                        (categoryFilter !== 'all' ? 1 : 0)
+                    }
+                    onReset={() => {
+                        setPriorityFilter('all');
+                        setCategoryFilter('all');
+                    }}
+                  >
+                     <div className="space-y-4">
+                         <div className="space-y-1.5">
+                             <label className="text-xs font-semibold text-muted-foreground uppercase">Priority</label>
+                             <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                                <SelectTrigger className="h-9 w-full">
+                                  <span className="truncate capitalize">{priorityFilter === 'all' ? 'All Priorities' : priorityFilter}</span>
+                                </SelectTrigger>
+                                 <SelectContent>
+                                    <SelectItem value="all">All Priorities</SelectItem>
+                                    <SelectItem value="critical">Critical</SelectItem>
+                                    <SelectItem value="high">High</SelectItem>
+                                    <SelectItem value="medium">Medium</SelectItem>
+                                    <SelectItem value="low">Low</SelectItem>
+                                 </SelectContent>
+                              </Select>
+                         </div>
 
-                  <motion.div layout className="relative" transition={{ type: "spring", bounce: 0, duration: 0.3 }}>
-                     <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                        <SelectTrigger className="h-8 text-xs border-dashed border-zinc-300 dark:border-zinc-700 shadow-none hover:bg-zinc-50 dark:hover:bg-zinc-800 w-auto min-w-[120px] px-2.5 transition-none">
-                          <span className="truncate capitalize">{categoryFilter === 'all' ? 'Category: All' : `Category: ${categoryFilter}`}</span>
-                        </SelectTrigger>
-                         <SelectContent>
-                            <SelectItem value="all">All Categories</SelectItem>
-                            <SelectItem value="feature">Feature</SelectItem>
-                            <SelectItem value="improvement">Improvement</SelectItem>
-                            <SelectItem value="bug">Bug</SelectItem>
-                         </SelectContent>
-                      </Select>
-                      {categoryFilter !== 'all' && (
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setCategoryFilter('all');
-                            }}
-                            className="absolute -top-1.5 -right-1.5 h-4 w-4 bg-zinc-500 hover:bg-zinc-600 text-white rounded-full flex items-center justify-center shadow-sm z-10 transition-colors"
-                        >
-                            <X size={10} strokeWidth={3} />
-                        </button>
-                      )}
-                  </motion.div>
-              </>
+                         <div className="space-y-1.5">
+                             <label className="text-xs font-semibold text-muted-foreground uppercase">Category</label>
+                             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                                <SelectTrigger className="h-9 w-full">
+                                  <span className="truncate capitalize">{categoryFilter === 'all' ? 'All Categories' : categoryFilter}</span>
+                                </SelectTrigger>
+                                 <SelectContent>
+                                    <SelectItem value="all">All Categories</SelectItem>
+                                    <SelectItem value="feature">Feature</SelectItem>
+                                    <SelectItem value="improvement">Improvement</SelectItem>
+                                    <SelectItem value="bug">Bug</SelectItem>
+                                 </SelectContent>
+                              </Select>
+                         </div>
+                     </div>
+                  </FilterPopover>
             }
             actions={
              <Button size="sm" className="rounded-lg h-8 text-xs shrink-0" onClick={() => setIsModalOpen(true)}>

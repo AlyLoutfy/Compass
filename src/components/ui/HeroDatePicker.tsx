@@ -16,12 +16,14 @@ interface HeroDatePickerProps {
     date: DateRange | undefined;
     setDate: (date: DateRange | undefined) => void;
     className?: string;
+    hideClear?: boolean;
 }
 
 export const HeroDatePicker: React.FC<HeroDatePickerProps> = ({ 
     date, 
     setDate,
-    className 
+    className,
+    hideClear = false
 }) => {
     // Convert DateRange to HeroUI CalendarDate Range using raw numbers to avoid TZ shifts
     const value = React.useMemo(() => {
@@ -50,18 +52,19 @@ export const HeroDatePicker: React.FC<HeroDatePickerProps> = ({
     };
 
     return (
-        <div className={cn("flex flex-col gap-1", className)}>
+        <div className="w-fit">
             <Popover>
                 <Popover.Trigger>
                     <div className="relative">
                         <Button 
                             className={cn(
                                 "h-9 bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-muted-foreground hover:text-foreground border-transparent px-3 min-w-0 transition-all gap-2",
-                                date?.from && "text-foreground font-medium" 
+                                date?.from && "text-foreground font-medium",
+                                className
                             )}
                         >
                             <CalendarIcon size={16} className="shrink-0" />
-                            <span className="truncate text-sm">
+                            <span className="truncate">
                                 {date?.from ? (
                                     date.to && date.to.toDateString() !== date.from.toDateString() ? (
                                         <>
@@ -74,7 +77,7 @@ export const HeroDatePicker: React.FC<HeroDatePickerProps> = ({
                                     "Pick a date"
                                 )}
                             </span>
-                            {date?.from && (
+                            {date?.from && !hideClear && (
                                 <div
                                     role="button"
                                     onClick={(e) => {
@@ -96,6 +99,17 @@ export const HeroDatePicker: React.FC<HeroDatePickerProps> = ({
                             onChange={handleRangeChange}
                             aria-label="Date Range"
                             className="border-none shadow-none"
+                                classNames={{
+                                base: "bg-white dark:bg-zinc-900",
+                                headerWrapper: "pt-4 bg-white dark:bg-zinc-900",
+                                gridHeader: "bg-white dark:bg-zinc-900",
+                                cellButton: [
+                                    "data-[selection-start=true]:bg-primary data-[selection-start=true]:text-primary-foreground",
+                                    "data-[selection-end=true]:bg-primary data-[selection-end=true]:text-primary-foreground",
+                                    "data-[in-range=true]:bg-primary/20 data-[in-range=true]:text-foreground dark:data-[in-range=true]:text-foreground",
+                                    "hover:bg-primary/15 hover:text-foreground"
+                                ].join(" ")
+                            }}
                         />
                     </Popover.Dialog>
                 </Popover.Content>

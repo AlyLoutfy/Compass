@@ -11,6 +11,9 @@ import { StandupCardShowcase } from '@/components/design/StandupCardShowcase';
 import { FilterShowcase } from '@/components/design/FilterShowcase';
 import { StandupHistoryShowcase } from '@/components/design/StandupHistoryShowcase';
 import { TicketDetailsShowcase } from '@/components/design/TicketDetailsShowcase';
+import { SprintDesignShowcase } from '@/components/design/SprintDesignShowcase';
+import { SprintDesignShowcaseV2 } from '@/components/design/SprintDesignShowcaseV2';
+import { SprintsPageDesignShowcase } from '@/components/design/SprintsPageDesignShowcase';
 
 // ... (existing mock components) ...
 
@@ -554,7 +557,7 @@ const variants = [
 ];
 
 export const DesignDecisionsPage = () => {
-    const [activeTab, setActiveTab] = React.useState<'modals' | 'ideas-views' | 'dev-cards' | 'standup-controls' | 'headers' | 'assign-modal' | 'standup-cards' | 'filters' | 'standup-history' | 'ticket-details'>('ticket-details');
+    const [activeTab, setActiveTab] = React.useState<'modals' | 'ideas-views' | 'dev-cards' | 'standup-controls' | 'headers' | 'assign-modal' | 'standup-cards' | 'filters' | 'standup-history' | 'ticket-details' | 'sprint-designs' | 'sprint-designs-v2' | 'sprint-layouts'>('sprint-layouts');
 
     return (
         <div className="flex flex-col pb-20">
@@ -621,6 +624,39 @@ export const DesignDecisionsPage = () => {
                         )}
                     >
                         Headers
+                    </button>
+                    <button 
+                         onClick={() => setActiveTab('sprint-designs')}
+                         className={cn(
+                            "px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
+                            activeTab === 'sprint-designs' 
+                                ? "bg-white dark:bg-zinc-800 text-foreground shadow-sm" 
+                                : "text-muted-foreground hover:text-foreground hover:bg-zinc-200/50 dark:hover:bg-zinc-700/50"
+                        )}
+                    >
+                        Sprint Aesthetic
+                    </button>
+                    <button 
+                         onClick={() => setActiveTab('sprint-designs-v2')}
+                         className={cn(
+                            "px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
+                            activeTab === 'sprint-designs-v2' 
+                                ? "bg-white dark:bg-zinc-800 text-foreground shadow-sm" 
+                                : "text-muted-foreground hover:text-foreground hover:bg-zinc-200/50 dark:hover:bg-zinc-700/50"
+                        )}
+                    >
+                        Sprint Functional
+                    </button>
+                    <button 
+                         onClick={() => setActiveTab('sprint-layouts')}
+                         className={cn(
+                            "px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
+                            activeTab === 'sprint-layouts' 
+                                ? "bg-white dark:bg-zinc-800 text-foreground shadow-sm" 
+                                : "text-muted-foreground hover:text-foreground hover:bg-zinc-200/50 dark:hover:bg-zinc-700/50"
+                        )}
+                    >
+                        Sprint Layouts
                     </button>
                     <button 
                          onClick={() => setActiveTab('filters')}
@@ -695,6 +731,24 @@ export const DesignDecisionsPage = () => {
                     {activeTab === 'headers' && (
                          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                              <HeaderDesignsShowcase />
+                         </div>
+                    )}
+
+                    {activeTab === 'sprint-designs' && (
+                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                             <SprintDesignShowcase />
+                         </div>
+                    )}
+
+                    {activeTab === 'sprint-designs-v2' && (
+                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                             <SprintDesignShowcaseV2 />
+                         </div>
+                    )}
+
+                    {activeTab === 'sprint-layouts' && (
+                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                             <SprintsPageDesignShowcase />
                          </div>
                     )}
 

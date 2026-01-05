@@ -122,6 +122,7 @@ export const SelectContent: React.FC<{ children: React.ReactNode, className?: st
   const { isOpen, setIsOpen, containerRef } = useSelect()
   const [position, setPosition] = useState<'bottom' | 'top'>('bottom')
   const [coords, setCoords] = useState<{ top?: number; bottom?: number; left: number; width: number }>({ left: 0, width: 0 })
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (isOpen && containerRef.current) {
@@ -152,8 +153,13 @@ export const SelectContent: React.FC<{ children: React.ReactNode, className?: st
         
         updatePosition()
         
-        // Close on scroll to prevent detached UI
-        const handleScroll = () => setIsOpen(false)
+        // Close on scroll to prevent detached UI, but allow scrolling internal content
+        const handleScroll = (e: Event) => {
+            if (dropdownRef.current && dropdownRef.current.contains(e.target as Node)) {
+                return;
+            }
+            setIsOpen(false)
+        }
         const handleResize = () => setIsOpen(false)
 
         window.addEventListener('resize', handleResize)
@@ -172,6 +178,7 @@ export const SelectContent: React.FC<{ children: React.ReactNode, className?: st
     <AnimatePresence>
       {isOpen && (
         <motion.div
+            ref={dropdownRef}
           initial={{ opacity: 0, scale: 0.95, y: position === 'bottom' ? -10 : 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: position === 'bottom' ? -10 : 10 }}

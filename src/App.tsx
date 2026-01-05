@@ -7,6 +7,7 @@ import { QAPage } from './pages/QAPage';
 import { ReleaseLog } from './pages/ReleaseLog';
 import { UsersPage } from './pages/UsersPage';
 import { RequirementsPage } from './pages/RequirementsPage';
+import { BacklogPage } from './pages/BacklogPage';
 import { DesignDecisionsPage } from './pages/DesignDecisionsPage';
 import { OrganizationsPage } from './pages/OrganizationsPage';
 import { TeamBoard } from './pages/TeamBoard';
@@ -19,6 +20,7 @@ function App() {
           <Routes>
             <Route path="/" element={<TeamBoard />} />
             <Route path="/ideas" element={<IdeasBoard />} />
+            <Route path="/sprints" element={<BacklogPage />} />
             <Route path="/tickets" element={<TicketsBoard />} />
             <Route path="/requirements" element={<RequirementsPage />} />
             <Route path="/qa" element={<QAPage />} />

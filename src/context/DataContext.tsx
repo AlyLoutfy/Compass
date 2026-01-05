@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { CompassData, Idea, Ticket, User, Requirement, Organization, ActivityEvent, StandupReport } from '../types';
+import { CompassData, Idea, Ticket, User, Requirement, Organization, ActivityEvent, StandupReport, Notification as AppNotification, Sprint } from '../types';
 import { storage } from '../services/storage';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -29,6 +29,13 @@ interface DataContextType {
     moveTicket: (id: string, newStatus: Ticket['status']) => void;
     archiveTicket: (id: string) => void;
     deleteTicket: (id: string) => void;
+    
+    // Sprints
+    addSprint: (sprint: Omit<Sprint, 'id' | 'createdAt'>) => void;
+    updateSprint: (id: string, updates: Partial<Sprint>) => void;
+    deleteSprint: (id: string) => void;
+    startSprint: (id: string, startDate: number, endDate: number) => void;
+    completeSprint: (id: string) => void;
     addUser: (user: Omit<User, 'id'>) => void;
     updateUser: (id: string, updates: Partial<User>) => void;
     deleteUser: (id: string) => void;
@@ -47,6 +54,11 @@ interface DataContextType {
     unassignTicket: (ticketId: string, userId: string) => void;
     completeTicket: (ticketId: string, userId: string) => void;
     saveStandupReport: (report: Omit<StandupReport, 'id'>) => void;
+    
+    // Notifications
+    addNotification: (notification: Omit<AppNotification, 'id' | 'timestamp' | 'isRead'>) => void;
+    markNotificationAsRead: (id: string) => void;
+    markAllNotificationsAsRead: () => void;
   };
 }
 
@@ -61,7 +73,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     shippedTickets: [],
     users: [],
     organizations: [],
-    standupHistory: []
+    standupHistory: [],
+    notifications: []
   });
   const [activityLog, setActivityLog] = useState<ActivityEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -227,7 +240,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         shippedTickets: shippedTickets,
         users: dummyUsers,
         organizations: dummyOrgs,
-        standupHistory: []
+        standupHistory: [],
+        notifications: []
       });
       setIsLoading(false);
     };
@@ -307,6 +321,31 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Update order property
       const updatedIdeas = result.map((item, index) => ({ ...item, order: index }));
       saveData({ ...data, ideas: updatedIdeas });
+    },
+
+    // Notifications
+    addNotification: (notification: Omit<AppNotification, 'id' | 'timestamp' | 'isRead'>) => {
+        const newNotification: AppNotification = {
+            ...notification,
+            id: uuidv4(),
+            timestamp: Date.now(),
+            isRead: false
+        };
+        saveData({ ...data, notifications: [newNotification, ...data.notifications] });
+    },
+
+    markNotificationAsRead: (id: string) => {
+        saveData({
+            ...data,
+            notifications: data.notifications.map(n => n.id === id ? { ...n, isRead: true } : n)
+        });
+    },
+
+    markAllNotificationsAsRead: () => {
+        saveData({
+            ...data,
+            notifications: data.notifications.map(n => ({ ...n, isRead: true }))
+        });
     },
 
     // Requirements Actions
@@ -471,6 +510,49 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     deleteTicket: (id: string) => {
         saveData({ ...data, tickets: data.tickets.filter((t) => t.id !== id) });
+    },
+
+    // Sprints
+    addSprint: (sprint: Omit<Sprint, 'id' | 'createdAt'>) => {
+        const newSprint: Sprint = {
+            ...sprint,
+            id: uuidv4(),
+            createdAt: Date.now()
+        };
+        saveData({ ...data, sprints: [...data.sprints, newSprint] });
+    },
+
+    updateSprint: (id: string, updates: Partial<Sprint>) => {
+        saveData({
+            ...data,
+            sprints: data.sprints.map(s => s.id === id ? { ...s, ...updates } : s)
+        });
+    },
+
+    deleteSprint: (id: string) => {
+        saveData({
+            ...data,
+            sprints: data.sprints.filter(s => s.id !== id),
+            tickets: data.tickets.map(t => t.sprintId === id ? { ...t, sprintId: undefined } : t)
+        });
+    },
+
+    startSprint: (id: string, startDate: number, endDate: number) => {
+         saveData({
+            ...data,
+            sprints: data.sprints.map(s => 
+                s.id === id ? { ...s, status: 'active', startDate, endDate } : s
+            )
+        });
+    },
+
+    completeSprint: (id: string) => {
+         saveData({
+            ...data,
+            sprints: data.sprints.map(s => 
+                s.id === id ? { ...s, status: 'completed' } : s
+            )
+        });
     },
 
     addUser: (user: Omit<User, 'id'>) => {
