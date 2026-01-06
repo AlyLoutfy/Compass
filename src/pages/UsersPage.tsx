@@ -230,110 +230,110 @@ export const UsersPage = () => {
             />
         </div>
 
-        <div className="mt-4 bg-card rounded-2xl border shadow-sm overflow-hidden bg-white dark:bg-zinc-900">
+        <div className="mt-4 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 rounded-lg overflow-hidden text-[13px]">
             <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[800px]">
-                    <thead>
-                        <tr className="border-b bg-zinc-50 dark:bg-zinc-800/50">
-                            <th className="p-4 w-12 text-center">
-                                <input 
-                                    type="checkbox" 
-                                    className="rounded border-zinc-300 dark:border-zinc-700 accent-primary cursor-pointer"
-                                    checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
-                                    onChange={toggleSelectAll}
-                                />
-                            </th>
-                            <th className="p-4 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Member</th>
-                            <th className="p-4 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Email</th>
-                            <th className="p-4 font-semibold text-xs text-muted-foreground uppercase tracking-wider text-center">Role</th>
-                            <th className="p-4 font-semibold text-xs text-muted-foreground uppercase tracking-wider text-center">Status</th>
-                            <th className="p-4 w-12"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredUsers.length === 0 ? (
-                            <tr>
-                                <td colSpan={6} className="p-12 text-center text-muted-foreground italic">
-                                    No users found matching your filters.
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredUsers.map((user) => (
-                                <tr 
-                                    key={user.id} 
-                                    onClick={() => handleEdit(user)}
-                                    className={cn(
-                                        "border-b last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors group cursor-pointer",
-                                        selectedUsers.includes(user.id) && "bg-primary/5"
-                                    )}
-                                >
-                                    <td className="p-4 text-center">
-                                        <input 
-                                            type="checkbox" 
-                                            className="rounded border-zinc-300 dark:border-zinc-700 accent-primary cursor-pointer"
-                                            checked={selectedUsers.includes(user.id)}
-                                            onClick={(e) => e.stopPropagation()}
-                                            onChange={(e) => toggleSelectUser(user.id, e as any)}
-                                        />
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-9 w-9 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 overflow-hidden ring-1 ring-border shadow-sm">
-                                                {user.avatar ? (
-                                                    <img src={user.avatar} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <span className="text-xs font-bold">{user.name.charAt(0).toUpperCase()}</span>
-                                                )}
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-semibold">{user.name}</span>
-                                                <span className="text-[10px] text-muted-foreground uppercase tracking-tighter font-medium">Click to edit details</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-sm text-muted-foreground">{user.email}</td>
-                                    <td className="p-4 text-center">
-                                         <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider px-2 py-0 border-zinc-200 dark:border-zinc-700">
-                                            {user.role === 'fullstack' ? 'Full Stack' : user.role}
-                                         </Badge>
-                                    </td>
-                                    <td className="p-4 text-center">
-                                        <div className={cn(
-                                            "inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-tighter",
-                                            user.status === 'online'
-                                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" 
-                                                : user.status === 'break'
-                                                ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                                                : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-500"
-                                        )}>
-                                            {user.status}
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-right">
-                                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="h-8 w-8 text-muted-foreground hover:text-primary"
-                                                onClick={(e) => { e.stopPropagation(); handleEdit(user); }}
-                                            >
-                                                <Pencil size={14} />
-                                            </Button>
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                                onClick={(e) => { e.stopPropagation(); openConfirmDelete(user.id); }}
-                                            >
-                                                <Trash2 size={14} />
-                                            </Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                <div className="min-w-[800px] flex border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
+                    <div className="w-16 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 text-center text-zinc-500 font-medium flex items-center justify-center">
+                        <input 
+                            type="checkbox" 
+                            className="rounded border-zinc-300 dark:border-zinc-700 accent-primary cursor-pointer"
+                            checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
+                            onChange={toggleSelectAll}
+                        />
+                    </div>
+                    <div className="flex-1 min-w-[300px] border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500">
+                        Member
+                    </div>
+                    <div className="w-48 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500">
+                        Email
+                    </div>
+                    <div className="w-32 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500 text-center">
+                        Role
+                    </div>
+                    <div className="w-32 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500 text-center">
+                        Status
+                    </div>
+                    <div className="w-24 shrink-0 p-2 font-medium pl-3 text-zinc-500 text-center">
+                        Actions
+                    </div>
+                </div>
+
+                {filteredUsers.length === 0 ? (
+                    <div className="p-12 text-center text-muted-foreground italic">
+                        No users found matching your filters.
+                    </div>
+                ) : (
+                    filteredUsers.map((user) => (
+                        <div 
+                            key={user.id} 
+                            className={cn(
+                                "min-w-[800px] border-b border-zinc-100 dark:border-zinc-800 last:border-0",
+                                selectedUsers.includes(user.id) && "bg-primary/5"
+                            )}
+                            onClick={() => handleEdit(user)}
+                        >
+                            <div className="group flex items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors cursor-pointer">
+                                <div className="w-16 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 text-center flex items-center justify-center">
+                                    <input 
+                                        type="checkbox" 
+                                        className="rounded border-zinc-300 dark:border-zinc-700 accent-primary cursor-pointer"
+                                        checked={selectedUsers.includes(user.id)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        onChange={(e) => toggleSelectUser(user.id, e as any)}
+                                    />
+                                </div>
+                                <div className="flex-1 min-w-[300px] border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 flex items-center gap-3 font-medium text-zinc-700 dark:text-zinc-200">
+                                    <div className="h-6 w-6 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 overflow-hidden ring-1 ring-border shadow-sm shrink-0">
+                                        {user.avatar ? (
+                                            <img src={user.avatar} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-[10px] font-bold">{user.name.charAt(0).toUpperCase()}</span>
+                                        )}
+                                    </div>
+                                    <span className="truncate">{user.name}</span>
+                                </div>
+                                <div className="w-48 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 text-zinc-600 dark:text-zinc-400 truncate">
+                                    {user.email}
+                                </div>
+                                <div className="w-32 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 text-center">
+                                     <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider px-2 py-0 border-zinc-200 dark:border-zinc-700">
+                                        {user.role === 'fullstack' ? 'Full Stack' : user.role}
+                                     </Badge>
+                                </div>
+                                <div className="w-32 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 text-center">
+                                    <div className={cn(
+                                        "inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-tighter border",
+                                        user.status === 'online'
+                                            ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400" 
+                                            : user.status === 'break'
+                                            ? "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400"
+                                            : "bg-zinc-500/10 text-zinc-500 border-zinc-500/20"
+                                    )}>
+                                        {user.status}
+                                    </div>
+                                </div>
+                                <div className="w-24 shrink-0 p-1.5 text-center flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                                        onClick={(e) => { e.stopPropagation(); handleEdit(user); }}
+                                    >
+                                        <Pencil size={12} />
+                                    </Button>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                                        onClick={(e) => { e.stopPropagation(); openConfirmDelete(user.id); }}
+                                    >
+                                        <Trash2 size={12} />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
         </div>
 
@@ -394,7 +394,11 @@ export const UsersPage = () => {
                                 required
                                 placeholder="John Doe"
                                 value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    const capitalized = val.charAt(0).toUpperCase() + val.slice(1);
+                                    setFormData({ ...formData, name: capitalized });
+                                }}
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -414,7 +418,7 @@ export const UsersPage = () => {
                                     value={formData.role} 
                                     onValueChange={(value: any) => setFormData({ ...formData, role: value })}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="capitalize">
                                         <SelectValue placeholder="Select Role" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -431,7 +435,7 @@ export const UsersPage = () => {
                                     value={formData.status} 
                                     onValueChange={(value: any) => setFormData({ ...formData, status: value })}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="capitalize">
                                         <SelectValue placeholder="Select Status" />
                                     </SelectTrigger>
                                     <SelectContent>

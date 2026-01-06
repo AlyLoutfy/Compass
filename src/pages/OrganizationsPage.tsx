@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useData } from '@/context/DataContext';
 import { Organization, OrganizationFeatures } from '@/types';
 import { Button } from '@/components/ui/Button';
@@ -32,7 +33,7 @@ const FEATURE_LABELS: Record<FeatureKey, string> = {
   reservations: 'Reservations',
   eois: 'EOIs',
   brokerages: 'Brokerages',
-  ticketing: 'Ticketing System',
+  ticketing: 'Ticketing',
   analytics: 'Analytics'
 };
 
@@ -196,146 +197,147 @@ export const OrganizationsPage = () => {
         />
       </div>
 
-      <div className="mt-4 bg-card rounded-2xl border shadow-sm overflow-hidden bg-white dark:bg-zinc-900">
+      <div className="mt-4 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[1000px]">
-            <thead>
-              <tr className="border-b bg-zinc-50 dark:bg-zinc-800/50">
-                <th className="p-4 w-12 text-center">
+          {/* Header */}
+          <div className="flex items-center min-w-[1000px] border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 text-xs font-semibold text-zinc-500 h-[45px]">
+             <div className="w-16 shrink-0 p-2 text-center flex items-center justify-center h-full">
                   <input 
                     type="checkbox" 
                     className="rounded border-zinc-300 dark:border-zinc-700 accent-primary cursor-pointer"
                     checked={selectedIds.length === visibleOrganizations.length && visibleOrganizations.length > 0}
                     onChange={toggleSelectAll}
                   />
-                </th>
-                <th className="p-4 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Organization Name</th>
-                <th className="p-4 font-semibold text-[10px] text-muted-foreground uppercase tracking-wider text-center">Status</th>
-                {(Object.keys(FEATURE_LABELS) as FeatureKey[]).map((key) => (
-                  <th key={key} className="p-4 font-semibold text-[10px] text-muted-foreground uppercase tracking-wider text-center">
+             </div>
+             <div className="flex-1 min-w-[200px] p-2 pl-3 uppercase tracking-wider text-[10px] h-full flex items-center">Organization Name</div>
+             <div className="w-28 shrink-0 p-2 text-center uppercase tracking-wider text-[10px] h-full flex items-center justify-center">Status</div>
+             {(Object.keys(FEATURE_LABELS) as FeatureKey[]).map((key) => (
+                <div key={key} className="w-28 shrink-0 p-2 text-center uppercase tracking-wider text-[10px] h-full flex items-center justify-center">
                     {FEATURE_LABELS[key]}
-                  </th>
-                ))}
-                <th className="p-4 w-12"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleOrganizations.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="p-12 text-center text-muted-foreground italic">
-                    {showInactive ? "No organizations found." : "No active organizations. Toggle view to see inactive ones."}
-                  </td>
-                </tr>
-              ) : (
-                visibleOrganizations.map((org) => (
-                  <tr 
-                    key={org.id} 
-                    onClick={() => setEditingOrganization(org)}
-                    className={cn(
-                      "border-b last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors group cursor-pointer",
-                      selectedIds.includes(org.id) && "bg-primary/5"
-                    )}
-                  >
-                    <td className="p-4 text-center">
-                      <input 
-                        type="checkbox" 
-                        className="rounded border-zinc-300 dark:border-zinc-700 accent-primary cursor-pointer"
-                        checked={selectedIds.includes(org.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => toggleSelect(org.id, e as any)}
-                      />
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                         <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 shrink-0 border border-zinc-200 dark:border-zinc-700 overflow-hidden">
-                            {org.logo ? (
-                                <img src={org.logo} className="w-full h-full object-cover" />
-                            ) : (
-                                <Building size={18} />
-                            )}
+                </div>
+             ))}
+             <div className="w-16 shrink-0 p-2 text-center h-full"></div>
+          </div>
+
+          <div className="min-w-[1000px]">
+             <AnimatePresence mode="popLayout" initial={false}>
+               {visibleOrganizations.length === 0 ? (
+                    <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="p-12 text-center text-muted-foreground italic border-b border-zinc-100 dark:border-zinc-800"
+                    >
+                        {showInactive ? "No organizations found." : "No active organizations. Toggle view to see inactive ones."}
+                    </motion.div>
+               ) : (
+                   visibleOrganizations.map((org) => (
+                      <motion.div
+                        layout
+                        key={org.id}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                        transition={{ duration: 0.2 }}
+                        onClick={() => setEditingOrganization(org)}
+                        className={cn(
+                          "flex items-center border-b border-zinc-100 dark:border-zinc-800 last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors group cursor-pointer",
+                          selectedIds.includes(org.id) && "bg-primary/5"
+                        )}
+                      >
+                         <div className="w-16 shrink-0 p-3 text-center flex items-center justify-center">
+                           <input 
+                             type="checkbox" 
+                             className="rounded border-zinc-300 dark:border-zinc-700 accent-primary cursor-pointer"
+                             checked={selectedIds.includes(org.id)}
+                             onClick={(e) => e.stopPropagation()}
+                             onChange={(e) => toggleSelect(org.id, e as any)}
+                           />
                          </div>
-                         <div className="flex flex-col">
-                            <span className="text-sm font-semibold">{org.name}</span>
-                            <span className="text-[10px] text-muted-foreground">Click to edit details</span>
+                         <div className="flex-1 min-w-[200px] p-3 pl-4">
+                           <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 shrink-0 border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                                 {org.logo ? (
+                                     <img src={org.logo} className="w-full h-full object-cover" />
+                                 ) : (
+                                     <Building size={18} />
+                                 )}
+                              </div>
+                              <div className="flex flex-col">
+                                 <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{org.name}</span>
+                                 <span className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">Click to edit</span>
+                              </div>
+                           </div>
                          </div>
-                      </div>
-                    </td>
-                    <td className="p-4 text-center">
-                        <div className={cn(
-                            "inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-tighter",
-                            org.isActive 
-                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" 
-                                : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-500"
-                        )}>
-                            {org.isActive ? 'Active' : 'Inactive'}
-                        </div>
-                    </td>
-                    {(Object.keys(FEATURE_LABELS) as FeatureKey[]).map((key) => (
-                      <td key={key} className="p-4 text-center">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setConfirmToggle({ orgId: org.id, key, value: !org.features[key] });
-                          }}
-                          className={cn(
-                            "mx-auto w-10 h-5 rounded-full transition-all duration-200 relative p-1",
-                            org.features[key] ? "bg-primary" : "bg-zinc-200 dark:bg-zinc-700"
-                          )}
-                        >
-                           <div className={cn(
-                             "w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-200",
-                             org.features[key] ? "translate-x-5" : "translate-x-0"
-                           )} />
-                        </button>
-                      </td>
-                    ))}
-                    <td className="p-4 text-right">
-                       <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeletingId(org.id);
-                          }}
-                          className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
-                       >
-                          <Trash2 size={16} />
-                       </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
+                         <div className="w-28 shrink-0 p-3 text-center">
+                             <div className={cn(
+                                 "inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-tighter border",
+                                 org.isActive 
+                                     ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400" 
+                                     : "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-500 dark:border-zinc-700"
+                             )}>
+                                 {org.isActive ? 'Active' : 'Inactive'}
+                             </div>
+                         </div>
+                         {(Object.keys(FEATURE_LABELS) as FeatureKey[]).map((key) => (
+                           <div key={key} className="w-28 shrink-0 p-3 text-center">
+                             <button 
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 setConfirmToggle({ orgId: org.id, key, value: !org.features[key] });
+                               }}
+                               className={cn(
+                                 "mx-auto w-10 h-5 rounded-full transition-all duration-200 relative p-1",
+                                 org.features[key] ? "bg-primary" : "bg-zinc-200 dark:bg-zinc-700"
+                               )}
+                             >
+                                <div className={cn(
+                                  "w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-200",
+                                  org.features[key] ? "translate-x-5" : "translate-x-0"
+                                )} />
+                             </button>
+                           </div>
+                         ))}
+                         <div className="w-16 shrink-0 p-3 text-center flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 setDeletingId(org.id);
+                               }}
+                               className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                            >
+                               <Trash2 size={16} />
+                            </button>
+                         </div>
+                      </motion.div>
+                   ))
+               )}
+             </AnimatePresence>
+          </div>
+
             {visibleOrganizations.length > 0 && (
-              <tfoot>
-                <tr className="bg-zinc-100/50 dark:bg-zinc-800/20 border-t border-zinc-200 dark:border-zinc-700">
-                  <td className="p-2"></td>
-                  <td className="p-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold">Total:</span>
-                      <span className="text-sm font-bold">{visibleOrganizations.length}</span>
-                    </div>
-                  </td>
-                  <td className="p-2 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <span className="text-sm font-bold">{visibleOrganizations.filter(d => d.isActive).length}</span>
-                      <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-tighter">Live</span>
-                    </div>
-                  </td>
+              <div className="flex items-center bg-zinc-50/50 dark:bg-zinc-900/20 border-t border-zinc-200 dark:border-zinc-800 min-w-[1000px] text-xs font-medium text-muted-foreground">
+                  <div className="w-16 p-2"></div>
+                  <div className="flex-1 p-2 pl-3 flex items-center gap-2">
+                      <span className="uppercase text-[10px] font-bold tracking-wider">Total:</span>
+                      <span className="font-bold text-foreground">{visibleOrganizations.length}</span>
+                  </div>
+                  <div className="w-28 p-2 text-center flex justify-center gap-1">
+                      <span className="font-bold text-foreground">{visibleOrganizations.filter(d => d.isActive).length}</span>
+                      <span className="text-[8px] uppercase font-bold tracking-tighter">Live</span>
+                  </div>
                   {(Object.keys(FEATURE_LABELS) as FeatureKey[]).map((key) => {
-                    const count = visibleOrganizations.filter(org => org.features[key]).length;
-                    return (
-                      <td key={key} className="p-2 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <span className="text-sm font-bold">{count}</span>
-                          <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-tighter">Active</span>
+                     const count = visibleOrganizations.filter(org => org.features[key]).length;
+                     return (
+                        <div key={key} className="w-28 p-2 text-center flex justify-center gap-1">
+                             <span className="font-bold text-foreground">{count}</span>
+                             <span className="text-[8px] uppercase font-bold tracking-tighter">Active</span>
                         </div>
-                      </td>
-                    );
+                     );
                   })}
-                  <td className="p-2"></td>
-                </tr>
-              </tfoot>
+                  <div className="w-16 p-2"></div>
+              </div>
             )}
-          </table>
         </div>
       </div>
 

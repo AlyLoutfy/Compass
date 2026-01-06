@@ -14,6 +14,7 @@ import { TicketDetailsShowcase } from '@/components/design/TicketDetailsShowcase
 import { SprintDesignShowcase } from '@/components/design/SprintDesignShowcase';
 import { SprintDesignShowcaseV2 } from '@/components/design/SprintDesignShowcaseV2';
 import { SprintsPageDesignShowcase } from '@/components/design/SprintsPageDesignShowcase';
+import { LeadsFilterShowcase } from '@/components/design/LeadsFilterShowcase';
 
 // ... (existing mock components) ...
 
@@ -557,7 +558,7 @@ const variants = [
 ];
 
 export const DesignDecisionsPage = () => {
-    const [activeTab, setActiveTab] = React.useState<'modals' | 'ideas-views' | 'dev-cards' | 'standup-controls' | 'headers' | 'assign-modal' | 'standup-cards' | 'filters' | 'standup-history' | 'ticket-details' | 'sprint-designs' | 'sprint-designs-v2' | 'sprint-layouts'>('sprint-layouts');
+    const [activeTab, setActiveTab] = React.useState<'modals' | 'ideas-views' | 'dev-cards' | 'standup-controls' | 'headers' | 'assign-modal' | 'standup-cards' | 'filters' | 'user-filters' | 'standup-history' | 'ticket-details' | 'sprint-designs' | 'sprint-designs-v2' | 'sprint-layouts'>('user-filters');
 
     return (
         <div className="flex flex-col pb-20">
@@ -713,6 +714,17 @@ export const DesignDecisionsPage = () => {
                     >
                         Ticket Details
                     </button>
+                    <button 
+                         onClick={() => setActiveTab('user-filters')}
+                         className={cn(
+                            "px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
+                            activeTab === 'user-filters' 
+                                ? "bg-white dark:bg-zinc-800 text-foreground shadow-sm" 
+                                : "text-muted-foreground hover:text-foreground hover:bg-zinc-200/50 dark:hover:bg-zinc-700/50"
+                        )}
+                    >
+                        User Filters
+                    </button>
 
                 </div>
             </div>
@@ -725,6 +737,12 @@ export const DesignDecisionsPage = () => {
                     {activeTab === 'ticket-details' && (
                          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                              <TicketDetailsShowcase />
+                         </div>
+                    )}
+
+                    {activeTab === 'user-filters' && (
+                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                             <LeadsFilterShowcase />
                          </div>
                     )}
 

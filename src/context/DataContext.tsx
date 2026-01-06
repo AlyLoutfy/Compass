@@ -89,12 +89,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Force reset with new dummy data, ignoring storage for this request
       
       const dummyUsers: User[] = [
-        { id: 'dev1', name: 'Sarah Chen', email: 'sarah@compass.inc', role: 'frontend', status: 'online', avatar: 'https://i.pravatar.cc/150?u=dev1' },
-        { id: 'dev2', name: 'Mike Ross', email: 'mike@compass.inc', role: 'backend', status: 'online', avatar: 'https://i.pravatar.cc/150?u=dev2' },
-        { id: 'dev3', name: 'Jessica Davis', email: 'jess@compass.inc', role: 'frontend', status: 'break', avatar: 'https://i.pravatar.cc/150?u=dev3' },
-        { id: 'dev4', name: 'Alex Wong', email: 'alex@compass.inc', role: 'backend', status: 'off', avatar: 'https://i.pravatar.cc/150?u=dev4' },
-        { id: 'dev5', name: 'David Kim', email: 'david@compass.inc', role: 'frontend', status: 'online', isBlocked: true, blockerReason: "Waiting for API specs", avatar: 'https://i.pravatar.cc/150?u=dev5' },
-        { id: 'dev6', name: 'Emily Blunt', email: 'emily@compass.inc', role: 'backend', status: 'online', currentTaskId: 'ticket-1', avatar: 'https://i.pravatar.cc/150?u=dev6' },
+        { id: 'user1', name: 'Ibrahem', email: 'ibrahem@compass.inc', role: 'frontend', status: 'online', avatar: 'https://i.pravatar.cc/150?u=user1' },
+        { id: 'user2', name: 'Khaled Osama', email: 'khaled.o@compass.inc', role: 'backend', status: 'online', avatar: 'https://i.pravatar.cc/150?u=user2' },
+        { id: 'user3', name: 'Khaled Mohamed', email: 'khaled.m@compass.inc', role: 'frontend', status: 'break', avatar: 'https://i.pravatar.cc/150?u=user3' },
+        { id: 'user4', name: 'Naroz', email: 'naroz@compass.inc', role: 'backend', status: 'off', avatar: 'https://i.pravatar.cc/150?u=user4' },
+        { id: 'user5', name: 'Milad', email: 'milad@compass.inc', role: 'frontend', status: 'online', isBlocked: true, blockerReason: "Waiting for API specs", avatar: 'https://i.pravatar.cc/150?u=user5' },
       ];
 
       const dummyOrgs: Organization[] = [
@@ -128,60 +127,60 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const dummyIdeas: Idea[] = [
         {
              id: 'idea1', title: 'AI Price Prediction', description: 'Use historical sales data to predict future unit prices.',
-             businessValue: 'High', sourceType: 'internal', category: 'feature', priority: 'high', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 0, reportedBy: 'dev1'
+             businessValue: 'High', sourceType: 'internal', category: 'feature', priority: 'high', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 0, reportedBy: 'Ibrahem'
         },
         {
              id: 'idea2', title: 'Interactive Map View', description: 'Visual map for selecting units directly from the masterplan.',
-             businessValue: 'High', sourceType: 'client', category: 'feature', priority: 'medium', status: 'approved', createdAt: Date.now(), updatedAt: Date.now(), order: 1, reportedBy: 'dev2'
+             businessValue: 'High', sourceType: 'client', category: 'feature', priority: 'medium', status: 'approved', createdAt: Date.now(), updatedAt: Date.now(), order: 1, reportedBy: 'Khaled Osama'
         },
         {
              id: 'idea3', title: 'WhatsApp Integration', description: 'Directly chat with leads via WhatsApp from the CRM.',
-             businessValue: 'Medium', sourceType: 'internal', category: 'improvement', priority: 'low', status: 'needs_clarification', createdAt: Date.now(), updatedAt: Date.now(), order: 2, reportedBy: 'dev3'
+             businessValue: 'Medium', sourceType: 'internal', category: 'improvement', priority: 'low', status: 'needs_clarification', createdAt: Date.now(), updatedAt: Date.now(), order: 2, reportedBy: 'Khaled Mohamed'
         },
-         {
+        {
              id: 'idea4', title: 'Brokerage Commission Calculator', description: 'Auto-calculate commissions based on tiered structure.',
-             businessValue: 'Medium', sourceType: 'client', category: 'feature', priority: 'medium', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 3, reportedBy: 'dev1'
+             businessValue: 'Medium', sourceType: 'client', category: 'feature', priority: 'medium', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 3, reportedBy: 'Ibrahem'
         },
         {
             id: 'idea5', title: 'VR Unit Tours', description: 'Integration with Matterport for virtual tours of properties.',
-            businessValue: 'High', sourceType: 'client', category: 'feature', priority: 'high', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 4, reportedBy: 'dev2'
+            businessValue: 'High', sourceType: 'client', category: 'feature', priority: 'high', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 4, reportedBy: 'Khaled Osama'
         },
         {
             id: 'idea6', title: 'Automated Email Drip Campaigns', description: 'Send automated follow-ups to leads based on activity.',
-            businessValue: 'Medium', sourceType: 'internal', category: 'feature', priority: 'medium', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 5, reportedBy: 'dev4'
+            businessValue: 'Medium', sourceType: 'internal', category: 'feature', priority: 'medium', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 5, reportedBy: 'Naroz'
         },
         {
             id: 'idea7', title: 'Mobile App for Brokers', description: 'Dedicated app for brokers to manage their opportunities.',
-            businessValue: 'High', sourceType: 'internal', category: 'feature', priority: 'high', status: 'needs_clarification', createdAt: Date.now(), updatedAt: Date.now(), order: 6, reportedBy: 'dev1'
+            businessValue: 'High', sourceType: 'internal', category: 'feature', priority: 'high', status: 'needs_clarification', createdAt: Date.now(), updatedAt: Date.now(), order: 6, reportedBy: 'Ibrahem'
         },
         {
             id: 'idea8', title: 'Advanced Reporting Suite', description: 'Customizable dashboards for sales managers.',
-            businessValue: 'Medium', sourceType: 'client', category: 'improvement', priority: 'low', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 7, reportedBy: 'dev3'
+            businessValue: 'Medium', sourceType: 'client', category: 'improvement', priority: 'low', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 7, reportedBy: 'Khaled Mohamed'
         },
         {
             id: 'idea9', title: 'Integration with Salesforce', description: 'Two-way sync with Salesforce CRM.',
-            businessValue: 'High', sourceType: 'internal', category: 'feature', priority: 'high', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 8, reportedBy: 'dev2'
+            businessValue: 'High', sourceType: 'internal', category: 'feature', priority: 'high', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 8, reportedBy: 'Khaled Osama'
         },
         {
             id: 'idea10', title: 'Dynamic Pricing Engine', description: 'Adjust unit prices based on demand and inventory levels.',
-            businessValue: 'High', sourceType: 'internal', category: 'feature', priority: 'critical', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 9, reportedBy: 'dev5'
+            businessValue: 'High', sourceType: 'internal', category: 'feature', priority: 'critical', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 9, reportedBy: 'Milad'
         }
       ];
 
       const dummyReqs: Requirement[] = [
          {
             id: 'req1', title: 'Export Leads to CSV', description: 'Enable sales team to export their assigned leads.', clientName: 'Palm Hills',
-            category: 'feature', priority: 'medium', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 0, reportedBy: 'dev1'
+            category: 'feature', priority: 'medium', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 0, reportedBy: 'user1'
          },
          {
             id: 'req2', title: 'Dark Mode Dashboard', description: 'Add dark mode support for the main admin dashboard.', clientName: 'TMG',
-            category: 'improvement', priority: 'low', status: 'approved', createdAt: Date.now(), updatedAt: Date.now(), order: 1, reportedBy: 'dev4'
+            category: 'improvement', priority: 'low', status: 'approved', createdAt: Date.now(), updatedAt: Date.now(), order: 1, reportedBy: 'user4'
          },
          {
             id: 'req3', title: 'Custom Reservation Timer', description: 'Allow setting dynamic timeout for unit reservations.', clientName: 'Mountain View',
-            category: 'feature', priority: 'high', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 2, reportedBy: 'dev2'
+            category: 'feature', priority: 'high', status: 'pending', createdAt: Date.now(), updatedAt: Date.now(), order: 2, reportedBy: 'user2'
          }
-      ];
+       ];
 
       const dummyTickets: Ticket[] = [
         // Backlog
@@ -202,31 +201,31 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         { id: 't30', title: 'Improve search performance', description: 'Index database columns for faster lookup.', status: 'backlog', priority: 'high', category: 'improvement', categoryNumber: 30, createdAt: Date.now(), updatedAt: Date.now(), order: 14, comments: [] },
 
         // Sprint
-        { id: 't3', title: 'Unit Inventory API', description: 'Create endpoints for fetching available units.', status: 'in_sprint', priority: 'high', category: 'feature', categoryNumber: 3, assignee: 'dev2', createdAt: Date.now(), updatedAt: Date.now(), order: 0, comments: [] },
-        { id: 't18', title: 'Write API Documentation', description: 'Document all new endpoints using Swagger.', status: 'in_sprint', priority: 'medium', category: 'improvement', categoryNumber: 18, assignee: 'dev6', createdAt: Date.now(), updatedAt: Date.now(), order: 1, comments: [] },
+        { id: 't3', title: 'Unit Inventory API', description: 'Create endpoints for fetching available units.', status: 'in_sprint', priority: 'high', category: 'feature', categoryNumber: 3, assignee: 'user2', createdAt: Date.now(), updatedAt: Date.now(), order: 0, comments: [] },
+        { id: 't18', title: 'Write API Documentation', description: 'Document all new endpoints using Swagger.', status: 'in_sprint', priority: 'medium', category: 'improvement', categoryNumber: 18, assignee: 'user3', createdAt: Date.now(), updatedAt: Date.now(), order: 1, comments: [] },
         
         // In Progress
-        { id: 't4', title: 'Lead Scoring Logic', description: 'Implement algorithm to score leads based on activity.', status: 'in_progress', priority: 'critical', category: 'feature', categoryNumber: 4, assignee: 'dev1', createdAt: Date.now(), updatedAt: Date.now(), order: 0, comments: [] },
-        { id: 't5', title: 'Fix Mobile Layout', description: 'Sidebar is overlapping content on small screens.', status: 'in_progress', priority: 'medium', category: 'bug', categoryNumber: 5, assignee: 'dev3', createdAt: Date.now(), updatedAt: Date.now(), order: 1, comments: [] },
-        { id: 't19', title: 'Redis Caching', description: 'Implement caching for frequently accessed data.', status: 'in_progress', priority: 'high', category: 'improvement', categoryNumber: 19, assignee: 'dev2', createdAt: Date.now(), updatedAt: Date.now(), order: 2, comments: [] },
+        { id: 't4', title: 'Lead Scoring Logic', description: 'Implement algorithm to score leads based on activity.', status: 'in_progress', priority: 'critical', category: 'feature', categoryNumber: 4, assignee: 'user1', createdAt: Date.now(), updatedAt: Date.now(), order: 0, comments: [] },
+        { id: 't5', title: 'Fix Mobile Layout', description: 'Sidebar is overlapping content on small screens.', status: 'in_progress', priority: 'medium', category: 'bug', categoryNumber: 5, assignee: 'user3', createdAt: Date.now(), updatedAt: Date.now(), order: 1, comments: [] },
+        { id: 't19', title: 'Redis Caching', description: 'Implement caching for frequently accessed data.', status: 'in_progress', priority: 'high', category: 'improvement', categoryNumber: 19, assignee: 'user2', createdAt: Date.now(), updatedAt: Date.now(), order: 2, comments: [] },
         
         // Blocked
-        { id: 't6', title: 'Third-party KYC Sync', description: 'Waiting for vendor API documentation.', status: 'blocked', priority: 'high', category: 'feature', categoryNumber: 6, assignee: 'dev5', createdAt: Date.now(), updatedAt: Date.now(), order: 0, comments: [] },
-        { id: 't20', title: 'SMS Gateway Access', description: 'Pending approval for SMS sender ID.', status: 'blocked', priority: 'medium', category: 'feature', categoryNumber: 20, assignee: 'dev4', createdAt: Date.now(), updatedAt: Date.now(), order: 1, comments: [] },
+        { id: 't6', title: 'Third-party KYC Sync', description: 'Waiting for vendor API documentation.', status: 'blocked', priority: 'high', category: 'feature', categoryNumber: 6, assignee: 'user5', createdAt: Date.now(), updatedAt: Date.now(), order: 0, comments: [] },
+        { id: 't20', title: 'SMS Gateway Access', description: 'Pending approval for SMS sender ID.', status: 'blocked', priority: 'medium', category: 'feature', categoryNumber: 20, assignee: 'user4', createdAt: Date.now(), updatedAt: Date.now(), order: 1, comments: [] },
         
         // Ready for QA
-        { id: 't7', title: 'User Profile Page', description: 'Allow users to update their avatar and password.', status: 'ready_for_qa', priority: 'medium', category: 'feature', categoryNumber: 7, assignee: 'dev6', createdAt: Date.now(), updatedAt: Date.now(), order: 0, comments: [] },
-        { id: 't8', title: 'Memory Leak in Calendar', description: 'Fix memory leak when switching months rapidly.', status: 'ready_for_qa', priority: 'critical', category: 'bug', categoryNumber: 8, assignee: 'dev4', createdAt: Date.now(), updatedAt: Date.now(), order: 1, comments: [] },
-        { id: 't21', title: 'Search Filtering', description: 'Ensure search filters persist after page reload.', status: 'ready_for_qa', priority: 'low', category: 'bug', categoryNumber: 21, assignee: 'dev1', createdAt: Date.now(), updatedAt: Date.now(), order: 2, comments: [] },
+        { id: 't7', title: 'User Profile Page', description: 'Allow users to update their avatar and password.', status: 'ready_for_qa', priority: 'medium', category: 'feature', categoryNumber: 7, assignee: 'user3', createdAt: Date.now(), updatedAt: Date.now(), order: 0, comments: [] },
+        { id: 't8', title: 'Memory Leak in Calendar', description: 'Fix memory leak when switching months rapidly.', status: 'ready_for_qa', priority: 'critical', category: 'bug', categoryNumber: 8, assignee: 'user4', createdAt: Date.now(), updatedAt: Date.now(), order: 1, comments: [] },
+        { id: 't21', title: 'Search Filtering', description: 'Ensure search filters persist after page reload.', status: 'ready_for_qa', priority: 'low', category: 'bug', categoryNumber: 21, assignee: 'user1', createdAt: Date.now(), updatedAt: Date.now(), order: 2, comments: [] },
 
         // Done
-        { id: 't9', title: 'Setup CI/CD Pipeline', description: 'Configure GitHub Actions for automated testing.', status: 'done', priority: 'high', category: 'improvement', categoryNumber: 9, assignee: 'dev2', createdAt: Date.now(), updatedAt: Date.now(), order: 0, comments: [] },
-        { id: 't22', title: 'Database Migration', description: 'Migrate users table to new schema.', status: 'done', priority: 'critical', category: 'improvement', categoryNumber: 22, assignee: 'dev5', createdAt: Date.now(), updatedAt: Date.now(), order: 1, comments: [] },
+        { id: 't9', title: 'Setup CI/CD Pipeline', description: 'Configure GitHub Actions for automated testing.', status: 'done', priority: 'high', category: 'improvement', categoryNumber: 9, assignee: 'user2', createdAt: Date.now(), updatedAt: Date.now(), order: 0, comments: [] },
+        { id: 't22', title: 'Database Migration', description: 'Migrate users table to new schema.', status: 'done', priority: 'critical', category: 'improvement', categoryNumber: 22, assignee: 'user5', createdAt: Date.now(), updatedAt: Date.now(), order: 1, comments: [] },
         
         // Shipped (Archive/Release)
-        { id: 't10', title: 'v1.0.0 Release', description: 'Initial public release.', status: 'shipped', priority: 'high', category: 'feature', categoryNumber: 10, assignee: 'dev1', createdAt: Date.now() - 86400000 * 2, updatedAt: Date.now() - 86400000 * 2, order: 0, comments: [], tags: ['Release', 'v1.0.0'] },
-        { id: 't11', title: 'Hotfix: Login Crash', description: 'Fixed crash on login for Safari users.', status: 'shipped', priority: 'critical', category: 'bug', categoryNumber: 11, assignee: 'dev3', createdAt: Date.now() - 86400000 * 5, updatedAt: Date.now() - 86400000 * 5, order: 0, comments: [], tags: ['Hotfix'] },
-         { id: 't12', title: 'Analytics Dashboard', description: 'Released the new analytics module.', status: 'shipped', priority: 'high', category: 'feature', categoryNumber: 12, assignee: 'dev2', createdAt: Date.now() - 86400000 * 10, updatedAt: Date.now() - 86400000 * 10, order: 0, comments: [], tags: ['Feature'] },
+        { id: 't10', title: 'v1.0.0 Release', description: 'Initial public release.', status: 'shipped', priority: 'high', category: 'feature', categoryNumber: 10, assignee: 'user1', createdAt: Date.now() - 86400000 * 2, updatedAt: Date.now() - 86400000 * 2, order: 0, comments: [], tags: ['Release', 'v1.0.0'] },
+        { id: 't11', title: 'Hotfix: Login Crash', description: 'Fixed crash on login for Safari users.', status: 'shipped', priority: 'critical', category: 'bug', categoryNumber: 11, assignee: 'user3', createdAt: Date.now() - 86400000 * 5, updatedAt: Date.now() - 86400000 * 5, order: 0, comments: [], tags: ['Hotfix'] },
+         { id: 't12', title: 'Analytics Dashboard', description: 'Released the new analytics module.', status: 'shipped', priority: 'high', category: 'feature', categoryNumber: 12, assignee: 'user2', createdAt: Date.now() - 86400000 * 10, updatedAt: Date.now() - 86400000 * 10, order: 0, comments: [], tags: ['Feature'] },
       ];
 
       const shippedTickets = dummyTickets.filter(t => t.status === 'shipped');

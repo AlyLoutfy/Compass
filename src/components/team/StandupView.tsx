@@ -39,6 +39,12 @@ export const StandupView: React.FC<StandupViewProps> = ({ isHistoryOpen, onToggl
     const [viewingReport, setViewingReport] = useState<StandupReport | null>(null);
     const [spokenUserIds, setSpokenUserIds] = useState<Set<string>>(new Set());
 
+    // Filtered Developers only (frontend, backend, fullstack)
+    const filteredDevelopers = useMemo(() => {
+        const allowedRoles = ['frontend', 'backend', 'fullstack'];
+        return data.users.filter(u => allowedRoles.includes(u.role));
+    }, [data.users]);
+
     // Timer Logic
     useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -75,7 +81,7 @@ export const StandupView: React.FC<StandupViewProps> = ({ isHistoryOpen, onToggl
 
     // Actions
     const handleNextSpeaker = () => {
-        const unspoken = data.users.filter(u => !spokenUserIds.has(u.id));
+        const unspoken = filteredDevelopers.filter(u => !spokenUserIds.has(u.id));
         if (unspoken.length === 0) {
             setFocusedUserId(null); // All done
             return;
@@ -89,7 +95,7 @@ export const StandupView: React.FC<StandupViewProps> = ({ isHistoryOpen, onToggl
         const report: Omit<StandupReport, 'id'> = {
             date: Date.now(),
             durationSeconds: (15 * 60) - timerSeconds,
-            attendees: data.users.map(u => ({
+            attendees: filteredDevelopers.map(u => ({
                 userId: u.id,
                 name: u.name,
                 avatar: u.avatar,
@@ -123,14 +129,17 @@ export const StandupView: React.FC<StandupViewProps> = ({ isHistoryOpen, onToggl
     // If viewingReport is active, we mock the users list from the report snapshot
     const displayUsers = useMemo(() => {
         if (viewingReport) {
-            return viewingReport.attendees.map(a => ({
-                ...a,
-                id: a.userId,
-                currentTaskId: a.todayTickets[0]?.id,
-            }));
+            const allowedRoles = ['frontend', 'backend', 'fullstack'];
+            return viewingReport.attendees
+                .filter(a => allowedRoles.includes(a.role))
+                .map(a => ({
+                    ...a,
+                    id: a.userId,
+                    currentTaskId: a.todayTickets[0]?.id,
+                }));
         }
-        return data.users;
-    }, [data.users, viewingReport]);
+        return filteredDevelopers;
+    }, [filteredDevelopers, viewingReport]);
 
     const unassignedTickets = useMemo(() => {
         if (viewingReport) return [];
@@ -338,7 +347,7 @@ export const StandupView: React.FC<StandupViewProps> = ({ isHistoryOpen, onToggl
                         setFocusedUserId(null);
                         setSpokenUserIds(new Set());
                     }}
-                    hasUnspoken={data.users.length > spokenUserIds.size}
+                    hasUnspoken={filteredDevelopers.length > spokenUserIds.size}
                     isStandupStarted={isStandupStarted}
                     onStartStandup={handleStartStandup}
                 />

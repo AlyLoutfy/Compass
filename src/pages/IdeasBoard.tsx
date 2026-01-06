@@ -293,7 +293,7 @@ export const IdeasBoard = () => {
 
                                 return (
                                 <div key={idea.id} className="min-w-[1000px] border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-                                    <div className="flex bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors group items-center">
+                                    <div className="group flex items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
                                     <div className="w-16 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 text-center text-zinc-400 font-mono text-xs flex items-center justify-between px-3">
                                         <span>{(currentPage - 1) * itemsPerPage + i + 1}</span>
                                         {idea.description && (
