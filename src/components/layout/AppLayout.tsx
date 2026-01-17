@@ -12,7 +12,8 @@ import {
   ClipboardList,
   Palette,
   Building2,
-  Layers
+  Layers,
+  Bug
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/Button';
@@ -28,9 +29,17 @@ interface SidebarProps {
 }
 
 export const AppLayout: React.FC<SidebarProps> = ({ children }) => {
-  const location = useLocation();
+  const { pathname } = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const mainRef = React.useRef<HTMLElement>(null);
+
+  // Scroll to top on every route change
+  React.useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
+    }
+  }, [pathname]);
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
@@ -38,6 +47,7 @@ export const AppLayout: React.FC<SidebarProps> = ({ children }) => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: Lightbulb, label: 'Ideas', path: '/ideas' },
     { icon: ClipboardList, label: 'Client Requirements', path: '/requirements' },
+    { icon: Bug, label: 'Bug Tracker', path: '/bugs' },
     { icon: Ticket, label: 'Tickets', path: '/tickets' },
     { icon: Layers, label: 'Sprints', path: '/sprints' },
     { icon: CheckCircle2, label: 'QA', path: '/qa' },
@@ -161,7 +171,7 @@ export const AppLayout: React.FC<SidebarProps> = ({ children }) => {
           <nav className="space-y-1 flex-1 overflow-y-auto no-scrollbar flex flex-col">
             <div className="space-y-1">
             {navItems.filter(item => item.path !== '/design').map((item) => {
-                const isActive = location.pathname === item.path;
+                const isActive = pathname === item.path;
                 
                 const NavContent = (
                     <NavLink
@@ -173,14 +183,14 @@ export const AppLayout: React.FC<SidebarProps> = ({ children }) => {
                                 : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                         )}
                     >
-                        {isActive && (
-                            <motion.div
-                                layoutId="sidebar-active-bg"
-                                className="absolute inset-0 bg-primary/10 border-r-2 border-primary rounded-r-none rounded-l-md"
-                                initial={false}
-                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            />
-                        )}
+                            {isActive && (
+                                <motion.div
+                                    layoutId="sidebar-active-bg"
+                                    className="absolute inset-0 bg-primary/10 rounded-lg"
+                                    initial={false}
+                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                />
+                            )}
                         
                         <div className="shrink-0 w-12 flex items-center justify-center">
                             <item.icon size={20} />
@@ -219,7 +229,7 @@ export const AppLayout: React.FC<SidebarProps> = ({ children }) => {
             {/* Design Link Stuck at Bottom (No divider) */}
             <div className="pt-1 mt-1">
                 {navItems.filter(item => item.path === '/design').map((item) => {
-                    const isActive = location.pathname === item.path;
+                    const isActive = pathname === item.path;
                     
                     const NavContent = (
                         <NavLink
@@ -234,7 +244,7 @@ export const AppLayout: React.FC<SidebarProps> = ({ children }) => {
                             {isActive && (
                                 <motion.div
                                     layoutId="sidebar-active-bg"
-                                    className="absolute inset-0 bg-primary/10 border-r-2 border-primary rounded-r-none rounded-l-md"
+                                    className="absolute inset-0 bg-primary/10 rounded-lg"
                                     initial={false}
                                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                                 />
@@ -318,9 +328,9 @@ export const AppLayout: React.FC<SidebarProps> = ({ children }) => {
       </motion.aside>
 
       {/* Main Content */}
-      <main className="flex-1 min-w-0 overflow-y-auto bg-background/50 relative">
+      <main ref={mainRef} className="flex-1 min-w-0 overflow-y-auto bg-background/50 relative">
         <div 
-          key={location.pathname}
+          key={pathname}
           className="w-full px-4 md:px-8 pb-4 md:pb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out"
         >
           {children}

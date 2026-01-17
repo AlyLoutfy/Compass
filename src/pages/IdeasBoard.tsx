@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useData } from '@/context/DataContext';
 import { Idea, Priority, TicketType, SourceType } from '@/types';
 import { Button } from '@/components/ui/Button';
@@ -9,7 +10,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { Plus, ArrowRight, ChevronLeft, ChevronRight, Pencil, MessageSquare, Lightbulb, Send, ChevronDown, ClipboardList, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, ArrowRight, ChevronLeft, ChevronRight, Pencil, MessageSquare, Lightbulb, Send, ChevronDown, ChevronUp, ClipboardList, GripVertical } from 'lucide-react';
 import { PageToolbar } from '@/components/layout/PageToolbar';
 import { FilterPopover } from '@/components/ui/FilterPopover';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -41,6 +42,7 @@ export const IdeasBoard = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
   
   // State for sorting describe
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
@@ -59,11 +61,13 @@ export const IdeasBoard = () => {
   };
   
   const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-        direction = 'desc';
-    }
-    setSortConfig({ key, direction });
+      setSortConfig(current => {
+          if (current?.key === key) {
+              if (current.direction === 'asc') return { key, direction: 'desc' };
+              return null; // Third click disables sort
+          }
+          return { key, direction: 'asc' };
+      });
   };
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -137,10 +141,22 @@ export const IdeasBoard = () => {
     }
   };
 
-  const SortIcon = ({ column }: { column: string }) => {
-      if (sortConfig?.key !== column) return <ArrowUpDown size={12} className="opacity-30" />;
-      return sortConfig.direction === 'asc' ? <ArrowUp size={12} className="text-primary" /> : <ArrowDown size={12} className="text-primary" />;
-  };
+    const onDragEnd = (result: DropResult) => {
+        setIsDragging(false);
+        if (!result.destination) return;
+
+        const sourceIdea = filteredIdeas[(currentPage - 1) * itemsPerPage + result.source.index];
+        const destinationIdea = filteredIdeas[(currentPage - 1) * itemsPerPage + result.destination.index];
+        
+        if (!sourceIdea || !destinationIdea) return;
+
+        const globalSourceIndex = data.ideas.findIndex(i => i.id === sourceIdea.id);
+        const globalDestinationIndex = data.ideas.findIndex(i => i.id === destinationIdea.id);
+        
+        if (globalSourceIndex !== -1 && globalDestinationIndex !== -1) {
+            actions.reorderIdeas(globalSourceIndex, globalDestinationIndex);
+        }
+    };
 
   // Keyboard shortcut for search
   useEffect(() => {
@@ -239,147 +255,289 @@ export const IdeasBoard = () => {
                             <div className="overflow-x-auto">
                             <div className="min-w-[1000px] flex border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
                                 {/* Sortable Headers */}
-                                <div    
-                                    className="w-16 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 text-center text-zinc-500 font-medium cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center gap-1 group select-none"
-                                    onClick={() => handleSort('id')}
-                                >
-                                    ID
-                                </div>
-                                <div 
-                                    className="flex-1 min-w-[300px] border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center justify-between group select-none"
-                                    onClick={() => handleSort('title')}
-                                >
-                                    Title <SortIcon column="title" />
-                                </div>
-                                <div 
-                                    className="w-24 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center justify-between group select-none"
-                                    onClick={() => handleSort('category')}
-                                >
-                                    Category <SortIcon column="category" />
-                                </div>
-                                <div 
-                                    className="w-24 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center justify-between group select-none"
-                                    onClick={() => handleSort('priority')}
-                                >
-                                    Priority <SortIcon column="priority" />
-                                </div>
-                                <div 
-                                    className="w-32 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center justify-between group select-none"
-                                    onClick={() => handleSort('organizations')}
-                                >
-                                    Organizations <SortIcon column="organizations" />
-                                </div>
-                                <div 
-                                    className="w-32 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center justify-between group select-none"
-                                    onClick={() => handleSort('reportedBy')}
-                                >
-                                    Reported By <SortIcon column="reportedBy" />
-                                </div>
-                                <div className="w-28 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium text-zinc-500 text-center">Comments</div>
+                                {['id', 'title', 'category', 'priority', 'organizations', 'reportedBy', 'comments'].map((key) => {
+                                    const label = key === 'id' ? 'ID' : 
+                                                  key === 'organizations' ? 'Organizations' : 
+                                                  key === 'reportedBy' ? 'Reported By' : 
+                                                  key.charAt(0).toUpperCase() + key.slice(1);
+                                    
+                                    if (key === 'comments') {
+                                         return <div key={key} className="w-28 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium text-zinc-500 text-center">Comments</div>;
+                                    }
+
+                                    const widthClass = key === 'id' ? 'w-16' : 
+                                                       key === 'category' ? 'w-24' : 
+                                                       key === 'priority' ? 'w-24' : 
+                                                       key === 'organizations' ? 'w-32' : 
+                                                       key === 'reportedBy' ? 'w-32' : 'flex-1 min-w-[300px]';
+
+                                    return (
+                                        <div 
+                                            key={key}
+                                            className={`${widthClass} shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center ${key === 'id' ? 'justify-center' : 'justify-between'} group select-none relative`}
+                                            onClick={() => handleSort(key)}
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                <motion.span layout>{label}</motion.span>
+                                                <AnimatePresence mode="wait">
+                                                    {sortConfig?.key === key && (
+                                                        <motion.div
+                                                            key={sortConfig.direction} // Key change triggers animation
+                                                            initial={{ opacity: 0, scale: 0.5, rotate: -180, marginLeft: 0 }}
+                                                            animate={{ opacity: 1, scale: 1, rotate: 0, marginLeft: 2 }}
+                                                            exit={{ opacity: 0, scale: 0.5, rotate: 180, marginLeft: 0 }}
+                                                            transition={{ duration: 0.2 }}
+                                                            layout
+                                                        >
+                                                            {sortConfig.direction === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                                 <div className="w-24 shrink-0 p-2 font-medium pl-3 text-zinc-500 text-center">Actions</div>
                             </div>
-                            {filteredIdeas.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((idea, i) => {
-                                const assignedOrgs = idea.affectedOrganizations ? idea.affectedOrganizations.map(id => data.organizations.find(d => d.id === id)).filter(Boolean) : [];
-                                const orgsDisplay = idea.affectedOrganizations?.includes('all') 
-                                    ? 'All Team' 
-                                    : assignedOrgs.length > 0 
-                                        ? (assignedOrgs.length === 1 ? assignedOrgs[0]?.name : `${assignedOrgs.length} Orgs`) 
-                                        : '-';
-                                const orgsTooltip = idea.affectedOrganizations?.includes('all')
-                                    ? 'All Organizations'
-                                    : assignedOrgs.map(o => o?.name).join(', ');
 
-                                const isExpanded = expandedIdeas.has(idea.id);
+                            {/* Body */}
+                            <DragDropContext onDragStart={() => setIsDragging(true)} onDragEnd={onDragEnd}>
+                                <Droppable droppableId="ideas-list">
+                                    {(provided) => (
+                                        <div 
+                                            ref={provided.innerRef} 
+                                            {...provided.droppableProps}
+                                        >
+                                            {filteredIdeas.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((idea, i) => {
+                                                const assignedOrgs = idea.affectedOrganizations?.includes('all') 
+                                                    ? []
+                                                    : data.organizations.filter(o => idea.affectedOrganizations?.includes(o.id));
+                                                
+                                                const orgsDisplay = idea.affectedOrganizations?.includes('all') 
+                                                    ? 'All Organizations' 
+                                                    : assignedOrgs.length > 0 
+                                                        ? (assignedOrgs.length === 1 ? assignedOrgs[0]?.name : `${assignedOrgs.length} Orgs`) 
+                                                        : '-';
+                                                const orgsTooltip = idea.affectedOrganizations?.includes('all')
+                                                    ? 'All Organizations'
+                                                    : assignedOrgs.map(o => o?.name).join(', ');
 
-                                return (
-                                <div key={idea.id} className="min-w-[1000px] border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-                                    <div className="group flex items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
-                                    <div className="w-16 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 text-center text-zinc-400 font-mono text-xs flex items-center justify-between px-3">
-                                        <span>{(currentPage - 1) * itemsPerPage + i + 1}</span>
-                                        {idea.description && (
-                                            <button 
-                                                onClick={(e) => toggleExpand(idea.id, e)}
-                                                className="p-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-sm transition-colors text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300"
-                                            >
-                                                <ChevronDown size={12} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                                            </button>
+                                                const isExpanded = expandedIdeas.has(idea.id);
+
+                                                return (
+                                                    <Draggable key={idea.id} draggableId={idea.id} index={i}>
+                                                        {(provided, snapshot) => (
+                                                            <div 
+                                                                ref={provided.innerRef}
+                                                                {...provided.draggableProps}
+                                                                style={{ ...provided.draggableProps.style }}
+                                                                className={`min-w-[1000px] border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${snapshot.isDragging ? "bg-white dark:bg-zinc-900 shadow-xl ring-1 ring-zinc-200 dark:ring-zinc-800 opacity-90 z-20" : ""}`}
+                                                            >
+                                                                <div className="group flex hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                                                                <div className="w-16 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 text-center text-zinc-400 font-mono text-xs flex items-center justify-between px-3">
+                                                                    <div 
+                                                                        {...provided.dragHandleProps}
+                                                                        className="cursor-grab active:cursor-grabbing hover:text-zinc-600 transition-colors mr-2"
+                                                                    >
+                                                                        <GripVertical size={14} />
+                                                                    </div>
+                                                                    <span>{(currentPage - 1) * itemsPerPage + i + 1}</span>
+                                                                    {idea.description && (
+                                                                        <button 
+                                                                            onClick={(e) => toggleExpand(idea.id, e)}
+                                                                            className="p-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-sm transition-colors text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 ml-1"
+                                                                        >
+                                                                            <ChevronDown size={12} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex-1 min-w-[300px] border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 font-medium text-zinc-700 dark:text-zinc-200 truncate cursor-pointer hover:underline" onClick={() => { setEditingIdea(idea); setEditingIdeaTab('details'); setIsModalOpen(true); }}>
+                                                                    <Tooltip content={idea.title} className="max-w-[400px] whitespace-normal">
+                                                                        {idea.title}
+                                                                    </Tooltip>
+                                                                </div>
+                                                                <div className="w-24 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 capitalize text-zinc-500">
+                                                                    <div className="flex items-center h-full" onClick={(e) => e.stopPropagation()}>
+                                                                        <Select value={idea.category} onValueChange={(val) => actions.updateIdea(idea.id, { category: val as any })}>
+                                                                            <SelectTrigger className="h-full w-full border-none shadow-none bg-transparent p-0 capitalize text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 focus:ring-0 [&>svg:last-child]:hidden justify-start">
+                                                                                {idea.category}
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                <SelectItem value="feature">Feature</SelectItem>
+                                                                                <SelectItem value="improvement">Improvement</SelectItem>
+                                                                                <SelectItem value="bug">Bug</SelectItem>
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-24 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3">
+                                                                    <div className="flex items-center h-full" onClick={(e) => e.stopPropagation()}>
+                                                                        <Select value={idea.priority} onValueChange={(val) => actions.updateIdea(idea.id, { priority: val as any })}>
+                                                                            <SelectTrigger className="h-auto w-fit p-0 border-none shadow-none bg-transparent focus:ring-0 [&>svg:last-child]:hidden rounded-sm">
+                                                                                <Badge variant={idea.priority === 'critical' ? 'destructive' : idea.priority === 'high' ? 'destructive' : idea.priority === 'medium' ? 'secondary' : 'outline'} className={`rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase transition-colors pointer-events-none ${idea.priority === 'critical' ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 border-red-500' : ''}`}>
+                                                                                    {idea.priority}
+                                                                                </Badge>
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                <SelectItem value="critical">Critical</SelectItem>
+                                                                                <SelectItem value="high">High</SelectItem>
+                                                                                <SelectItem value="medium">Medium</SelectItem>
+                                                                                <SelectItem value="low">Low</SelectItem>
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-32 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-1 pl-1 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                                                                    <MultiSelectDropdown
+                                                                        options={[
+                                                                            { id: 'all', name: 'All Organizations' },
+                                                                            ...data.organizations.map(o => ({ id: o.id, name: o.name }))
+                                                                        ]}
+                                                                        selectedIds={idea.affectedOrganizations || []}
+                                                                        onChange={(ids) => actions.updateIdea(idea.id, { affectedOrganizations: ids })}
+                                                                        placeholder="Select Orgs"
+                                                                        triggerVariant="ghost"
+                                                                        triggerClassName="h-8 w-fit min-w-[20px] px-1 justify-center font-normal hover:bg-zinc-100 dark:hover:bg-zinc-800/50 border-none shadow-none"
+                                                                        className="w-full flex justify-center"
+                                                                        showArrow={false}
+                                                                        renderValue={(selected) => {
+                                                                            if (!selected || selected.length === 0) {
+                                                                                return <span className="text-zinc-300 dark:text-zinc-700 text-[10px] italic">--</span>;
+                                                                            }
+                                                                            if (selected.includes('all')) return <span className="text-xs text-zinc-600 dark:text-zinc-400">All Orgs</span>;
+                                                                            
+                                                                            const count = selected.length;
+                                                                            const firstOrgId = selected[0];
+                                                                            const firstOrg = data.organizations.find(o => o.id === firstOrgId);
+                                                                            
+                                                                            if (count > 1) {
+                                                                                 const names = selected.map(id => data.organizations.find(o => o.id === id)?.name).filter(Boolean);
+                                                                                 return (
+                                                                                     <Tooltip 
+                                                                                         content={
+                                                                                             <div className="flex flex-col gap-1 min-w-[120px]">
+                                                                                                 <span className="font-semibold text-xs border-b border-zinc-700/50 pb-1 mb-0.5 text-zinc-300">Selected Orgs ({count})</span>
+                                                                                                 {names.map((name, i) => (
+                                                                                                     <span key={i} className="text-zinc-400 text-xs flex items-center gap-1.5">
+                                                                                                         <span className="w-1 h-1 rounded-full bg-primary/50 shrink-0" />
+                                                                                                         {name}
+                                                                                                     </span>
+                                                                                                 ))}
+                                                                                             </div>
+                                                                                         }
+                                                                                         className="bg-zinc-900 border-zinc-800 p-2"
+                                                                                     >
+                                                                                        <span className="text-xs text-zinc-600 dark:text-zinc-400 truncate max-w-[100px] cursor-help">{count} Orgs</span>
+                                                                                     </Tooltip>
+                                                                                 );
+                                                                            }
+
+                                                                            const text = count === 1 ? firstOrg?.name : `${count} Orgs`;
+                                                                            return <span className="text-xs text-zinc-600 dark:text-zinc-400 truncate max-w-[100px]">{text}</span>;
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <div className="w-32 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 text-zinc-600 dark:text-zinc-400 truncate">
+                                                                    <div className="flex items-center h-full w-full" onClick={(e) => e.stopPropagation()}>
+                                                                        <Select 
+                                                                            value={idea.reportedBy && data.users.find(u => u.id === idea.reportedBy || u.name === idea.reportedBy) ? (data.users.find(u => u.id === idea.reportedBy || u.name === idea.reportedBy)?.id ?? 'unassigned') : 'unassigned'} 
+                                                                            onValueChange={(val) => actions.updateIdea(idea.id, { reportedBy: val === 'unassigned' ? undefined : val })}
+                                                                        >
+                                                                            <SelectTrigger className="h-full w-full p-0 border-none shadow-none bg-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/10 focus:ring-0 flex items-center overflow-hidden [&>svg:last-child]:hidden">
+                                                                                {(() => {
+                                                                                    const reporter = data.users.find(u => u.id === idea.reportedBy || u.name === idea.reportedBy);
+                                                                                    if (reporter) {
+                                                                                        return (
+                                                                                            <div className="flex items-center gap-2 pointer-events-none">
+                                                                                                <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold shrink-0">
+                                                                                                    {reporter.name.charAt(0)}
+                                                                                                </div>
+                                                                                                <span className="text-sm truncate">{reporter.name}</span>
+                                                                                            </div>
+                                                                                        );
+                                                                                    }
+                                                                                    return <span className="text-zinc-400 italic pointer-events-none text-sm">{idea.reportedBy || '-'}</span>;
+                                                                                })()}
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                <SelectItem value="unassigned" className="text-zinc-400 italic">Unassigned</SelectItem>
+                                                                                {data.users.map(u => (
+                                                                                    <SelectItem key={u.id} value={u.id}>
+                                                                                        <div className="flex items-center gap-2">
+                                                                                            <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold border border-primary/20">
+                                                                                                {u.name.charAt(0)}
+                                                                                            </div>
+                                                                                            {u.name}
+                                                                                        </div>
+                                                                                    </SelectItem>
+                                                                                ))}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-28 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 text-center">
+                                                                     {idea.comments && idea.comments.length > 0 ? (
+                                                                        <button 
+                                                                            onClick={(e) => { e.stopPropagation(); setEditingIdea(idea); setEditingIdeaTab('comments'); setIsModalOpen(true); }}
+                                                                            className="inline-flex items-center gap-1 text-zinc-400 hover:text-primary hover:bg-primary/5 px-2 py-1 rounded-md transition-colors"
+                                                                        >
+                                                                            <MessageSquare size={12} /> {idea.comments.length}
+                                                                        </button>
+                                                                     ) : (
+                                                                         <button 
+                                                                            onClick={(e) => { e.stopPropagation(); setEditingIdea(idea); setEditingIdeaTab('comments'); setIsModalOpen(true); }}
+                                                                            className="text-zinc-300 hover:text-zinc-500 transition-colors"
+                                                                        >
+                                                                            -
+                                                                        </button>
+                                                                     )}
+                                                                </div>
+                                                                <div className="w-24 shrink-0 p-1.5 flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <Tooltip content="Edit Idea" side="top">
+                                                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground" onClick={() => { setEditingIdea(idea); setEditingIdeaTab('details'); setIsModalOpen(true); }}>
+                                                                            <Pencil size={12} />
+                                                                        </Button>
+                                                                    </Tooltip>
+                                                                    <Tooltip content="Promote to Ticket" side="top">
+                                                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-green-600" onClick={() => openConfirm('approve', idea.id)}>
+                                                                            <ArrowRight size={12} />
+                                                                        </Button>
+                                                                    </Tooltip>
+                                                                    <Tooltip content="Delete Idea" side="top">
+                                                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-red-600" onClick={() => openConfirm('delete', idea.id)}>
+                                                                            <Plus className="rotate-45" size={12} />
+                                                                        </Button>
+                                                                    </Tooltip>
+                                                                </div>
+                                                            </div>
+                                                                <AnimatePresence>
+                                                                    {isExpanded && idea.description && (
+                                                                        <motion.div
+                                                                            initial={{ height: 0, opacity: 0 }}
+                                                                            animate={{ height: 'auto', opacity: 1 }}
+                                                                            exit={{ height: 0, opacity: 0 }}
+                                                                            transition={{ duration: 0.2 }}
+                                                                            className="overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/30 border-t border-zinc-100 dark:border-zinc-800"
+                                                                        >
+                                                                            <div className="p-3 pl-16 text-sm text-zinc-600 dark:text-zinc-400">
+                                                                                <div className="font-semibold text-xs uppercase text-zinc-400 mb-1 flex items-center gap-1">
+                                                                                    <ClipboardList size={12} /> Description
+                                                                                </div>
+                                                                                {idea.description}
+                                                                            </div>
+                                                                        </motion.div>
+                                                                    )}
+                                                                </AnimatePresence>
+                                                            </div>
+                                                        )}
+                                                    </Draggable>
+                                                    );
+                                                })}
+                                                {provided.placeholder}
+                                            </div>
                                         )}
-                                    </div>
-                                    <div className="flex-1 min-w-[300px] border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 font-medium text-zinc-700 dark:text-zinc-200 truncate cursor-pointer hover:underline" onClick={() => { setEditingIdea(idea); setEditingIdeaTab('details'); setIsModalOpen(true); }}>
-                                        <Tooltip content={idea.title} className="max-w-[400px] whitespace-normal">
-                                            {idea.title}
-                                        </Tooltip>
-                                    </div>
-                                    <div className="w-24 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 capitalize text-zinc-500">
-                                        {idea.category}
-                                    </div>
-                                    <div className="w-24 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3">
-                                        <Badge variant={idea.priority === 'critical' ? 'destructive' : idea.priority === 'high' ? 'destructive' : idea.priority === 'medium' ? 'secondary' : 'outline'} className={`rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase transition-colors ${idea.priority === 'critical' ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 border-red-500' : ''}`}>
-                                            {idea.priority}
-                                        </Badge>
-                                    </div>
-                                    <div className="w-32 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 text-zinc-600 dark:text-zinc-400 truncate" title={orgsTooltip}>
-                                        {orgsDisplay}
-                                    </div>
-                                    <div className="w-32 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 text-zinc-600 dark:text-zinc-400 truncate">
-                                        {idea.reportedBy || '-'}
-                                    </div>
-                                    <div className="w-28 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 text-center">
-                                         {idea.comments && idea.comments.length > 0 ? (
-                                            <button 
-                                                onClick={(e) => { e.stopPropagation(); setEditingIdea(idea); setEditingIdeaTab('comments'); setIsModalOpen(true); }}
-                                                className="inline-flex items-center gap-1 text-zinc-400 hover:text-primary hover:bg-primary/5 px-2 py-1 rounded-md transition-colors"
-                                            >
-                                                <MessageSquare size={12} /> {idea.comments.length}
-                                            </button>
-                                         ) : (
-                                             <button 
-                                                onClick={(e) => { e.stopPropagation(); setEditingIdea(idea); setEditingIdeaTab('comments'); setIsModalOpen(true); }}
-                                                className="text-zinc-300 hover:text-zinc-500 transition-colors"
-                                            >
-                                                -
-                                            </button>
-                                         )}
-                                    </div>
-                                    <div className="w-24 shrink-0 p-1.5 flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Tooltip content="Edit Idea" side="top">
-                                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground" onClick={() => { setEditingIdea(idea); setEditingIdeaTab('details'); setIsModalOpen(true); }}>
-                                                <Pencil size={12} />
-                                            </Button>
-                                        </Tooltip>
-                                        <Tooltip content="Promote to Ticket" side="top">
-                                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-green-600" onClick={() => openConfirm('approve', idea.id)}>
-                                                <ArrowRight size={12} />
-                                            </Button>
-                                        </Tooltip>
-                                        <Tooltip content="Delete Idea" side="top">
-                                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-red-600" onClick={() => openConfirm('delete', idea.id)}>
-                                                <Plus className="rotate-45" size={12} />
-                                            </Button>
-                                        </Tooltip>
-                                    </div>
-                                </div>
-                                    <AnimatePresence>
-                                        {isExpanded && idea.description && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: 'auto', opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                transition={{ duration: 0.2 }}
-                                                className="overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/30 border-t border-zinc-100 dark:border-zinc-800"
-                                            >
-                                                <div className="p-3 pl-16 text-sm text-zinc-600 dark:text-zinc-400">
-                                                    <div className="font-semibold text-xs uppercase text-zinc-400 mb-1 flex items-center gap-1">
-                                                        <ClipboardList size={12} /> Description
-                                                    </div>
-                                                    {idea.description}
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-                                );
-                            })}
+                                    </Droppable>
+                                </DragDropContext>
                         </div>
                         </div>
 

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { CompassData, Idea, Ticket, User, Requirement, Organization, ActivityEvent, StandupReport, Notification as AppNotification, Sprint } from '../types';
+import { CompassData, Idea, Ticket, User, Requirement, Organization, ActivityEvent, StandupReport, Notification as AppNotification, Sprint, Bug } from '../types';
 import { storage } from '../services/storage';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -46,6 +46,12 @@ interface DataContextType {
     bulkUpdateOrganizations: (ids: string[], updates: any) => void;
     deleteOrganization: (id: string) => void;
 
+    // Bugs
+    addBug: (bug: Omit<Bug, 'id' | 'createdAt' | 'updatedAt' | 'comments' | 'order'>) => void;
+    reorderBugs: (startIndex: number, endIndex: number) => void;
+    updateBug: (id: string, updates: Partial<Bug>) => void;
+    deleteBug: (id: string) => void;
+    promoteBugToTicket: (bugId: string) => void; 
 
     // EngineRoom Actions
     updateUserStatus: (userId: string, status: User['status']) => void;
@@ -68,6 +74,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [data, setData] = useState<CompassData>({
     ideas: [],
     requirements: [],
+    bugs: [],
     tickets: [],
     sprints: [],
     shippedTickets: [],
@@ -182,6 +189,64 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
          }
        ];
 
+      const dummyBugs: Bug[] = [
+        {
+            id: 'bug1',
+            title: 'Login Page layout broken on Mobile',
+            description: 'The login button is pushed off screen on iPhone SE.',
+            severity: 'major',
+            priority: 'high',
+            status: 'todo',
+            platform: 'mobile',
+            layer: 'frontend',
+            stepsToReproduce: '1. Open app on iPhone SE\n2. Go to login page\n3. Observe button',
+            expectedResult: 'Button should be visible',
+            actualResult: 'Button is hidden',
+            reportedBy: 'user1',
+            createdAt: Date.now() - 1000000,
+            updatedAt: Date.now(),
+            comments: [],
+            screenshots: [
+                "https://images.unsplash.com/photo-1596742578669-25f312739712?auto=format&fit=crop&q=80&w=300&h=200",
+                "https://images.unsplash.com/photo-1555421689-491a97ff2040?auto=format&fit=crop&q=80&w=300&h=200"
+            ],
+            order: 0
+        },
+        {
+            id: 'bug2',
+            title: '500 Error when saving large PDF',
+            description: 'Uploading a PDF > 10MB causes server error.',
+            severity: 'critical',
+            priority: 'critical',
+            status: 'in_progress',
+            platform: 'desktop',
+            layer: 'backend',
+            reportedBy: 'user2',
+            assignee: 'user4',
+            createdAt: Date.now() - 5000000,
+            updatedAt: Date.now(),
+            comments: [
+                { id: 'c1', text: 'I think this is a timeout issue.', author: 'User', createdAt: Date.now() }
+            ],
+            order: 1
+        },
+        {
+            id: 'bug3',
+            title: 'Wrong color on inactive tabs',
+            description: 'Should be gray, currently blue.',
+            severity: 'cosmetic',
+            priority: 'low',
+            status: 'todo',
+            platform: 'all',
+            layer: 'design',
+            reportedBy: 'user3',
+            createdAt: Date.now() - 200000,
+            updatedAt: Date.now(),
+            comments: [],
+            order: 2
+        }
+      ];
+
       const dummyTickets: Ticket[] = [
         // Backlog
         { id: 't1', title: 'Integrate Payment Gateway', description: 'Setup Stripe integration for down payments.', status: 'backlog', priority: 'high', category: 'feature', categoryNumber: 1, createdAt: Date.now(), updatedAt: Date.now(), order: 0, comments: [] },
@@ -234,6 +299,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setData({
         ideas: dummyIdeas,
         requirements: dummyReqs,
+        bugs: dummyBugs,
         tickets: activeTickets,
         sprints: [],
         shippedTickets: shippedTickets,
@@ -601,6 +667,72 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     deleteOrganization: (id: string) => {
         saveData({ ...data, organizations: data.organizations.filter(d => d.id !== id) });
+    },
+
+    // Bugs
+    addBug: (bug: Omit<Bug, 'id' | 'createdAt' | 'updatedAt' | 'comments' | 'order'>) => {
+        const newBug: Bug = {
+            ...bug,
+            id: uuidv4(),
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            comments: [],
+            order: data.bugs.length // Add at the end
+        };
+        saveData({ ...data, bugs: [newBug, ...data.bugs] });
+    },
+
+    reorderBugs: (startIndex: number, endIndex: number) => {
+        const result = Array.from(data.bugs);
+        const [removed] = result.splice(startIndex, 1);
+        result.splice(endIndex, 0, removed);
+        
+        const updatedBugs = result.map((bug, index) => ({
+            ...bug,
+            order: index
+        }));
+        
+        saveData({ ...data, bugs: updatedBugs });
+    },
+
+    updateBug: (id: string, updates: Partial<Bug>) => {
+        saveData({
+            ...data,
+            bugs: data.bugs.map(b => b.id === id ? { ...b, ...updates, updatedAt: Date.now() } : b)
+        });
+    },
+
+    deleteBug: (id: string) => {
+        saveData({ ...data, bugs: data.bugs.filter(b => b.id !== id) });
+    },
+
+    promoteBugToTicket: (bugId: string) => {
+        const bug = data.bugs.find(b => b.id === bugId);
+        if (!bug) return;
+
+        const ticket: Ticket = {
+            id: uuidv4(),
+            title: `[Bug] ${bug.title}`,
+            description: `**Source Bug:** ${bug.id}\n**Severity:** ${bug.severity}\n**Platform:** ${bug.platform}\n\n${bug.description}\n\n**Steps:**\n${bug.stepsToReproduce || 'N/A'}`,
+            status: 'backlog',
+            priority: bug.priority,
+            category: 'bug',
+            categoryNumber: getMaxTicketNumber(data.tickets) + 1,
+            comments: bug.comments || [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            order: data.tickets.filter(t => t.status === 'backlog' && !t.assignee).length,
+        };
+
+        const updatedBugs = data.bugs.map(b => 
+            b.id === bugId ? { ...b, status: 'in_progress' as const, updatedAt: Date.now() } : b
+        );
+
+        saveData({
+            ...data,
+            bugs: updatedBugs,
+            tickets: [ticket, ...data.tickets]
+        });
     },
 
     // EngineRoom Actions

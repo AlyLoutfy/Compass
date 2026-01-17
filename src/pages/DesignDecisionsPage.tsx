@@ -16,6 +16,7 @@ import { SprintDesignShowcaseV2 } from '@/components/design/SprintDesignShowcase
 import { SprintsPageDesignShowcase } from '@/components/design/SprintsPageDesignShowcase';
 import { LeadsFilterShowcase } from '@/components/design/LeadsFilterShowcase';
 
+
 // ... (existing mock components) ...
 
 
@@ -558,7 +559,19 @@ const variants = [
 ];
 
 export const DesignDecisionsPage = () => {
-    const [activeTab, setActiveTab] = React.useState<'modals' | 'ideas-views' | 'dev-cards' | 'standup-controls' | 'headers' | 'assign-modal' | 'standup-cards' | 'filters' | 'user-filters' | 'standup-history' | 'ticket-details' | 'sprint-designs' | 'sprint-designs-v2' | 'sprint-layouts'>('user-filters');
+    const [activeTab, setActiveTab] = React.useState<'modals' | 'bug-modals' | 'ideas-views' | 'dev-cards' | 'standup-controls' | 'headers' | 'assign-modal' | 'standup-cards' | 'filters' | 'user-filters' | 'standup-history' | 'ticket-details' | 'bug-details' | 'sprint-designs' | 'sprint-designs-v2' | 'sprint-layouts'>('bug-modals');
+    const contentRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        if (contentRef.current) {
+            contentRef.current.scrollTop = 0;
+        }
+        // Also scroll the main layout container if it exists
+        const mainElement = document.querySelector('main');
+        if (mainElement) {
+            mainElement.scrollTop = 0;
+        }
+    }, [activeTab]);
 
     return (
         <div className="flex flex-col pb-20">
@@ -571,7 +584,8 @@ export const DesignDecisionsPage = () => {
                 </div>
                 
                 <div className="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800/50 rounded-lg w-fit overflow-x-auto max-w-full">
-                    <button 
+
+                    <button  
                         onClick={() => setActiveTab('modals')}
                         className={cn(
                             "px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
@@ -585,7 +599,7 @@ export const DesignDecisionsPage = () => {
                     <button 
                         onClick={() => setActiveTab('ideas-views')}
                         className={cn(
-                            "px-4 py-1.5 rounded-md text-sm font-medium transition-all",
+                            "px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
                             activeTab === 'ideas-views' 
                                 ? "bg-white dark:bg-zinc-800 text-foreground shadow-sm" 
                                 : "text-muted-foreground hover:text-foreground hover:bg-zinc-200/50 dark:hover:bg-zinc-700/50"
@@ -596,7 +610,7 @@ export const DesignDecisionsPage = () => {
                     <button 
                          onClick={() => setActiveTab('dev-cards')}
                          className={cn(
-                            "px-4 py-1.5 rounded-md text-sm font-medium transition-all",
+                            "px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
                             activeTab === 'dev-cards' 
                                 ? "bg-white dark:bg-zinc-800 text-foreground shadow-sm" 
                                 : "text-muted-foreground hover:text-foreground hover:bg-zinc-200/50 dark:hover:bg-zinc-700/50"
@@ -726,13 +740,16 @@ export const DesignDecisionsPage = () => {
                         User Filters
                     </button>
 
+
                 </div>
             </div>
 
 
             {/* Content Area */}
-            <div className="flex-1 overflow-auto">
+            <div ref={contentRef} className="flex-1 overflow-auto">
                 <div className="max-w-7xl mx-auto p-8 relative">
+
+
 
                     {activeTab === 'ticket-details' && (
                          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -745,6 +762,8 @@ export const DesignDecisionsPage = () => {
                              <LeadsFilterShowcase />
                          </div>
                     )}
+
+
 
                     {activeTab === 'headers' && (
                          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">

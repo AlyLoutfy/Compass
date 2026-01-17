@@ -83,6 +83,49 @@ export interface Sprint {
 }
 
 
+// ... existing code ...
+export interface Sprint {
+  id: string;
+  name: string;
+  status: 'active' | 'completed' | 'planned';
+  startDate: number;
+  endDate: number;
+  createdAt: number;
+}
+
+
+// --- BUG TRACKER TYPES ---
+
+export type BugSeverity = 'blocker' | 'critical' | 'major' | 'minor' | 'cosmetic';
+export type BugStatus = 'todo' | 'in_progress' | 'in_review' | 'ready_for_qa' | 'resolved' | 'blocked';
+export type Platform = 'desktop' | 'mobile' | 'all';
+export type BugLayer = 'frontend' | 'backend' | 'fullstack' | 'design' | 'database' | 'devops';
+
+export interface Bug {
+  id: string;
+  title: string;
+  description: string;
+  severity: BugSeverity;
+  priority: Priority; // Reusing existing Priority type
+  status: BugStatus;
+  platform: Platform;
+  layer?: BugLayer;
+  
+  // Reproduction
+  stepsToReproduce?: string;
+  expectedResult?: string;
+  actualResult?: string;
+  screenshots?: string[];
+  
+  // Metadata
+  reportedBy: string; // User ID or Name
+  assignee?: string; // User ID
+  createdAt: number;
+  updatedAt: number;
+  comments?: Comment[];
+  order: number;
+}
+
 export type RequirementStatus = 'pending' | 'approved' | 'rejected';
 
 export interface Requirement {
@@ -122,6 +165,7 @@ export interface Organization {
 export interface CompassData {
   ideas: Idea[];
   requirements: Requirement[];
+  bugs: Bug[]; // New
   tickets: Ticket[];
   sprints: Sprint[];
   users: User[];

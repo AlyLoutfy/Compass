@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { AnimatePresence, motion } from "framer-motion"
-import { ChevronDown, Check } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface SelectContextType {
@@ -48,8 +48,19 @@ export const Select: React.FC<SelectProps> = ({ value, onValueChange, children, 
         setIsOpen(false)
       }
     }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+            setIsOpen(false)
+        }
+    }
+
     document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+        document.removeEventListener("mousedown", handleClickOutside)
+        document.removeEventListener("keydown", handleKeyDown)
+    }
   }, [])
 
   const registerOption = useCallback((val: string, label: React.ReactNode) => {
@@ -227,18 +238,13 @@ export const SelectItem: React.FC<{ value: string, children: React.ReactNode, cl
         setIsOpen(false)
       }}
       className={cn(
-        "relative flex w-full cursor-pointer select-none items-center rounded-lg py-2.5 pl-2.5 pr-8 text-sm outline-none transition-colors",
-        "hover:bg-zinc-200/50 dark:hover:bg-zinc-700/50", // Stronger hover effect
-        isSelected && "bg-muted font-medium",
+        "relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 px-2.5 text-sm outline-none transition-colors",
+        "hover:bg-zinc-200 dark:hover:bg-zinc-700",
+        isSelected && "bg-zinc-200 dark:bg-zinc-700 font-semibold",
         className
       )}
     >
-      <span className="whitespace-nowrap">{children}</span>
-      {isSelected && (
-        <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
-          <Check className="h-4 w-4 opacity-50 text-blue-500" />
-        </span>
-      )}
+      <span className="whitespace-nowrap flex-1 text-left">{children}</span>
     </div>
   )
 }

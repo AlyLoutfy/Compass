@@ -11,9 +11,11 @@ interface ModalProps {
   children: React.ReactNode;
   className?: string;
   noPadding?: boolean;
+  hideCloseButton?: boolean;
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, className, noPadding }) => {
+
+export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, className, noPadding, hideCloseButton }) => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -75,20 +77,24 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
               {title ? (
                 <div className="flex items-center justify-between px-8 py-6 shrink-0">
                   <h2 className="text-2xl font-bold tracking-tight text-foreground">{title}</h2>
-                  <button 
-                    onClick={onClose}
-                    className="p-2 -mr-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                  >
-                    <X size={20} />
-                  </button>
+                  {!hideCloseButton && (
+                    <button 
+                        onClick={onClose}
+                        className="p-2 -mr-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                    >
+                        <X size={20} />
+                    </button>
+                  )}
                 </div>
               ) : (
-                <button 
-                  onClick={onClose}
-                  className="absolute right-4 top-4 p-2 rounded-full hover:bg-white/10 dark:hover:bg-black/20 text-muted-foreground hover:text-foreground z-50 transition-colors"
-                >
-                  <X size={20} />
-                </button>
+                !hideCloseButton && (
+                    <button 
+                    onClick={onClose}
+                    className="absolute right-4 top-4 p-2 rounded-full hover:bg-white/10 dark:hover:bg-black/20 text-muted-foreground hover:text-foreground z-50 transition-colors"
+                    >
+                    <X size={20} />
+                    </button>
+                )
               )}
 
               {/* Body */}

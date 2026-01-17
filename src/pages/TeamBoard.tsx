@@ -52,6 +52,7 @@ export const TeamBoard: React.FC = () => {
             <div className="pt-4 md:pt-8">
                 <PageToolbar 
                     title="Dashboard"
+                    hideTitleDivider={true}
                     filters={
                         <div className="flex items-center gap-2">
                             {/* Standup History Button */}

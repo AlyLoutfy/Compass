@@ -12,6 +12,7 @@ interface PageToolbarProps {
     countLabel?: string;
     filters?: React.ReactNode;
     actions?: React.ReactNode;
+    hideTitleDivider?: boolean;
 }
 
 export const PageToolbar = ({
@@ -22,7 +23,8 @@ export const PageToolbar = ({
     count,
     countLabel = "items",
     filters,
-    actions
+    actions,
+    hideTitleDivider = false
 }: PageToolbarProps) => {
     return (
         <div className="flex items-center p-1.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-950 gap-2 shadow-sm mb-6 overflow-x-auto no-scrollbar">
@@ -32,7 +34,9 @@ export const PageToolbar = ({
             </div>
             
             {/* Divider */}
-            <div className="h-4 w-[1px] bg-zinc-200 dark:bg-zinc-700 mx-1 shrink-0" />
+            {!hideTitleDivider && (
+                <div className="h-4 w-[1px] bg-zinc-200 dark:bg-zinc-700 mx-1 shrink-0" />
+            )}
 
             {/* Search */}
             {onSearchChange && (

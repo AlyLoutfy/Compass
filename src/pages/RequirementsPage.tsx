@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useData } from '@/context/DataContext';
 import { Requirement, Priority, TicketType } from '@/types';
 import { Button } from '@/components/ui/Button';
@@ -10,7 +11,7 @@ import { MultiSelectDropdown } from '@/components/ui/MultiSelectDropdown';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { Plus, Pencil, ChevronLeft, ChevronRight, ArrowRight, ClipboardList, ChevronDown, MessageSquare, Send } from 'lucide-react';
+import { Plus, Pencil, ChevronLeft, ChevronRight, ArrowRight, ClipboardList, ChevronDown, MessageSquare, Send, ChevronUp, GripVertical } from 'lucide-react';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Tooltip } from '@/components/ui/Tooltip';
@@ -43,6 +44,7 @@ export const RequirementsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 100;
   const [expandedReqs, setExpandedReqs] = useState<Set<string>>(new Set());
+  const [isDragging, setIsDragging] = useState(false);
 
   const toggleExpand = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -58,6 +60,18 @@ export const RequirementsPage = () => {
   const pendingReqs = data.requirements
     .filter(r => r.status === 'pending')
     .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+
+  const handleSort = (key: string) => {
+      setSortConfig(current => {
+          if (current?.key === key) {
+              if (current.direction === 'asc') return { key, direction: 'desc' };
+              return null;
+          }
+          return { key, direction: 'asc' };
+      });
+  };
 
   // Applied filters
   const filteredReqs = pendingReqs.filter(req => {
@@ -80,7 +94,31 @@ export const RequirementsPage = () => {
         }
     }
     return true;
+  }).sort((a, b) => {
+      if (!sortConfig) return 0;
+      const { key, direction } = sortConfig;
+
+      let valA: any = a[key as keyof Requirement];
+      let valB: any = b[key as keyof Requirement];
+
+      if (key === 'organizations') {
+           valA = a.affectedOrganizations?.length || 0;
+           valB = b.affectedOrganizations?.length || 0;
+      } else if (key === 'comments') {
+           valA = a.comments?.length || 0;
+           valB = b.comments?.length || 0;
+      }
+
+      // Handle undefined/null (push to bottom usually, or standard comparison)
+      if (!valA && valA !== 0) valA = '';
+      if (!valB && valB !== 0) valB = '';
+
+      if (valA < valB) return direction === 'asc' ? -1 : 1;
+      if (valA > valB) return direction === 'asc' ? 1 : -1;
+      return 0;
   });
+
+
 
   const openConfirm = (type: 'delete' | 'approve', id: string) => {
     if (type === 'delete') {
@@ -109,6 +147,23 @@ export const RequirementsPage = () => {
         actions.promoteRequirementToTicket(confirmConfig.id);
     }
   };
+
+    const onDragEnd = (result: DropResult) => {
+        setIsDragging(false);
+        if (!result.destination) return;
+
+        const sourceReq = filteredReqs[(currentPage - 1) * itemsPerPage + result.source.index];
+        const destinationReq = filteredReqs[(currentPage - 1) * itemsPerPage + result.destination.index];
+        
+        if (!sourceReq || !destinationReq) return;
+
+        const globalSourceIndex = data.requirements.findIndex(r => r.id === sourceReq.id);
+        const globalDestinationIndex = data.requirements.findIndex(r => r.id === destinationReq.id);
+        
+        if (globalSourceIndex !== -1 && globalDestinationIndex !== -1) {
+            actions.reorderRequirements(globalSourceIndex, globalDestinationIndex);
+        }
+    };
 
   return (
     <div className="flex flex-col">
@@ -211,117 +266,289 @@ export const RequirementsPage = () => {
                         <div className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 rounded-lg overflow-hidden text-[13px]">
                             <div className="overflow-x-auto">
                             <div className="min-w-[1000px] flex border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
-                                <div className="w-16 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 text-center text-zinc-500 font-medium">ID</div>
-                                <div className="flex-1 min-w-[300px] border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500">Title</div>
-                                <div className="w-24 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500">Category</div>
-                                <div className="w-24 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500">Priority</div>
-                                <div className="w-32 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500">Organizations</div>
-                                <div className="w-32 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500">Reported By</div>
-                                <div className="w-28 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium text-zinc-500 text-center">Comments</div>
+                                {['id', 'title', 'category', 'priority', 'organizations', 'reportedBy', 'comments'].map((key) => {
+                                    const label = key === 'id' ? 'ID' : 
+                                                  key === 'organizations' ? 'Organizations' : 
+                                                  key === 'reportedBy' ? 'Reported By' : 
+                                                  key.charAt(0).toUpperCase() + key.slice(1);
+                                    
+                                    if (key === 'comments') {
+                                         return <div key={key} className="w-28 shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium text-zinc-500 text-center">Comments</div>;
+                                    }
+
+                                    const widthClass = key === 'id' ? 'w-16' : 
+                                                       key === 'category' ? 'w-24' : 
+                                                       key === 'priority' ? 'w-24' : 
+                                                       key === 'organizations' ? 'w-32' : 
+                                                       key === 'reportedBy' ? 'w-32' : 'flex-1 min-w-[300px]';
+
+                                    return (
+                                        <div 
+                                            key={key}
+                                            className={`${widthClass} shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-2 font-medium pl-3 text-zinc-500 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center ${key === 'id' ? 'justify-center' : 'justify-between'} group select-none relative`}
+                                            onClick={() => handleSort(key)}
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                <motion.span layout>{label}</motion.span>
+                                                <AnimatePresence mode="wait">
+                                                    {sortConfig?.key === key && (
+                                                        <motion.div
+                                                            key={sortConfig.direction}
+                                                            initial={{ opacity: 0, scale: 0.5, rotate: -180, marginLeft: 0 }}
+                                                            animate={{ opacity: 1, scale: 1, rotate: 0, marginLeft: 2 }}
+                                                            exit={{ opacity: 0, scale: 0.5, rotate: 180, marginLeft: 0 }}
+                                                            transition={{ duration: 0.2 }}
+                                                            layout
+                                                        >
+                                                            {sortConfig.direction === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                                 <div className="w-24 shrink-0 p-2 font-medium pl-3 text-zinc-500 text-center">Actions</div>
                             </div>
-                            {filteredReqs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((req, i) => {
-                                const assignedOrgs = req.affectedOrganizations ? req.affectedOrganizations.map(id => data.organizations.find(d => d.id === id)).filter(Boolean) : [];
-                                const orgsDisplay = req.affectedOrganizations?.includes('all') 
-                                    ? 'All Team' 
-                                    : assignedOrgs.length > 0 
-                                        ? (assignedOrgs.length === 1 ? assignedOrgs[0]?.name : `${assignedOrgs.length} Orgs`) 
-                                        : '-';
-                                const orgsTooltip = req.affectedOrganizations?.includes('all')
-                                    ? 'All Organizations'
-                                    : assignedOrgs.map(o => o?.name).join(', ');
-                                const isExpanded = expandedReqs.has(req.id);
 
-                                return (
-                                <div key={req.id} className="min-w-[1000px] border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-                                    <div className="group flex items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
-                                        <div className="w-16 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 text-center text-zinc-400 font-mono text-xs flex items-center justify-between px-3">
-                                            <span>{(currentPage - 1) * itemsPerPage + i + 1}</span>
-                                            {req.description && (
-                                                <button 
-                                                    onClick={(e) => toggleExpand(req.id, e)}
-                                                    className="p-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-sm transition-colors text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300"
-                                                >
-                                                    <ChevronDown size={12} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                                                </button>
-                                            )}
+                        {/* Body */}
+                        <DragDropContext onDragStart={() => setIsDragging(true)} onDragEnd={onDragEnd}>
+                            <Droppable droppableId="requirements-list">
+                                {(provided) => (
+                                    <div 
+                                        ref={provided.innerRef} 
+                                        {...provided.droppableProps}
+                                    >
+                                        {filteredReqs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((req, i) => {
+                                            const assignedOrgs = req.affectedOrganizations?.includes('all') 
+                                                ? []
+                                                : data.organizations.filter(o => req.affectedOrganizations?.includes(o.id));
+                                            
+                                            const orgsDisplay = req.affectedOrganizations?.includes('all') 
+                                                ? 'All Organizations' 
+                                                : assignedOrgs.length > 0 
+                                                    ? (assignedOrgs.length === 1 ? assignedOrgs[0]?.name : `${assignedOrgs.length} Orgs`) 
+                                                    : '-';
+                                            const orgsTooltip = req.affectedOrganizations?.includes('all')
+                                                ? 'All Organizations'
+                                                : assignedOrgs.map(o => o?.name).join(', ');
+                                            const isExpanded = expandedReqs.has(req.id);
+
+                                            return (
+                                                <Draggable key={req.id} draggableId={req.id} index={i}>
+                                                    {(provided, snapshot) => (
+                                                        <div 
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            style={{ ...provided.draggableProps.style }}
+                                                            className={`min-w-[1000px] border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${snapshot.isDragging ? "bg-white dark:bg-zinc-900 shadow-xl ring-1 ring-zinc-200 dark:ring-zinc-800 opacity-90 z-20" : ""}`}
+                                                        >
+                                                            <div className="group flex hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                                                                <div className="w-16 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 text-center text-zinc-400 font-mono text-xs flex items-center justify-between px-3">
+                                                                    <div 
+                                                                        {...provided.dragHandleProps}
+                                                                        className="cursor-grab active:cursor-grabbing hover:text-zinc-600 transition-colors mr-2"
+                                                                    >
+                                                                        <GripVertical size={14} />
+                                                                    </div>
+                                                                    <span>{(currentPage - 1) * itemsPerPage + i + 1}</span>
+                                                                    {req.description && (
+                                                                        <button 
+                                                                            onClick={(e) => toggleExpand(req.id, e)}
+                                                                            className="p-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-sm transition-colors text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 ml-1"
+                                                                        >
+                                                                            <ChevronDown size={12} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex-1 min-w-[300px] border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 font-medium text-zinc-700 dark:text-zinc-200 truncate cursor-pointer hover:underline" onClick={() => { setEditingRequirement(req); setEditingRequirementTab('details'); setIsModalOpen(true); }}>
+                                                                    <Tooltip content={req.title} className="max-w-[400px] whitespace-normal">
+                                                                        {req.title}
+                                                                    </Tooltip>
+                                                                </div>
+                                                                <div className="w-24 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 capitalize text-zinc-500">
+                                                                    <div className="flex items-center h-full" onClick={(e) => e.stopPropagation()}>
+                                                                        <Select value={req.category} onValueChange={(val) => actions.updateRequirement(req.id, { category: val as any })}>
+                                                                            <SelectTrigger className="h-full w-full border-none shadow-none bg-transparent p-0 capitalize text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 focus:ring-0 [&>svg:last-child]:hidden justify-start">
+                                                                                {req.category}
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                <SelectItem value="feature">Feature</SelectItem>
+                                                                                <SelectItem value="improvement">Improvement</SelectItem>
+                                                                                <SelectItem value="bug">Bug</SelectItem>
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-24 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3">
+                                                                    <div className="flex items-center h-full" onClick={(e) => e.stopPropagation()}>
+                                                                        <Select value={req.priority} onValueChange={(val) => actions.updateRequirement(req.id, { priority: val as any })}>
+                                                                            <SelectTrigger className="h-auto w-fit p-0 border-none shadow-none bg-transparent focus:ring-0 [&>svg:last-child]:hidden rounded-sm">
+                                                                                <Badge variant={req.priority === 'critical' ? 'destructive' : req.priority === 'high' ? 'destructive' : req.priority === 'medium' ? 'secondary' : 'outline'} className={`rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase transition-colors pointer-events-none ${req.priority === 'critical' ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 border-red-500' : ''}`}>
+                                                                                    {req.priority}
+                                                                                </Badge>
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                <SelectItem value="critical">Critical</SelectItem>
+                                                                                <SelectItem value="high">High</SelectItem>
+                                                                                <SelectItem value="medium">Medium</SelectItem>
+                                                                                <SelectItem value="low">Low</SelectItem>
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-32 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-1 pl-1 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                                                                    <MultiSelectDropdown
+                                                                        options={[
+                                                                            { id: 'all', name: 'All Organizations' },
+                                                                            ...data.organizations.map(o => ({ id: o.id, name: o.name }))
+                                                                        ]}
+                                                                        selectedIds={req.affectedOrganizations || []}
+                                                                        onChange={(ids) => actions.updateRequirement(req.id, { affectedOrganizations: ids })}
+                                                                        placeholder="Select Orgs"
+                                                                        triggerVariant="ghost"
+                                                                        triggerClassName="h-8 w-fit min-w-[20px] px-1 justify-center font-normal hover:bg-zinc-100 dark:hover:bg-zinc-800/50 border-none shadow-none"
+                                                                        className="w-full flex justify-center"
+                                                                        showArrow={false}
+                                                                        renderValue={(selected) => {
+                                                                            if (!selected || selected.length === 0) {
+                                                                                return <span className="text-zinc-300 dark:text-zinc-700 text-[10px] italic">--</span>;
+                                                                            }
+                                                                            if (selected.includes('all')) return <span className="text-xs text-zinc-600 dark:text-zinc-400">All Orgs</span>;
+                                                                            
+                                                                            const count = selected.length;
+                                                                            const firstOrgId = selected[0];
+                                                                            const firstOrg = data.organizations.find(o => o.id === firstOrgId);
+
+                                                                            if (count > 1) {
+                                                                                 const names = selected.map(id => data.organizations.find(o => o.id === id)?.name).filter(Boolean);
+                                                                                 return (
+                                                                                     <Tooltip 
+                                                                                         content={
+                                                                                             <div className="flex flex-col gap-1 min-w-[120px]">
+                                                                                                 <span className="font-semibold text-xs border-b border-zinc-700/50 pb-1 mb-0.5 text-zinc-300">Selected Orgs ({count})</span>
+                                                                                                 {names.map((name, i) => (
+                                                                                                     <span key={i} className="text-zinc-400 text-xs flex items-center gap-1.5">
+                                                                                                         <span className="w-1 h-1 rounded-full bg-primary/50 shrink-0" />
+                                                                                                         {name}
+                                                                                                     </span>
+                                                                                                 ))}
+                                                                                             </div>
+                                                                                         }
+                                                                                         className="bg-zinc-900 border-zinc-800 p-2"
+                                                                                     >
+                                                                                        <span className="text-xs text-zinc-600 dark:text-zinc-400 truncate max-w-[100px] cursor-help">{count} Orgs</span>
+                                                                                     </Tooltip>
+                                                                                 );
+                                                                            }
+
+                                                                            const text = count === 1 ? firstOrg?.name : `${count} Orgs`;
+                                                                            return <span className="text-xs text-zinc-600 dark:text-zinc-400 truncate max-w-[100px]">{text}</span>;
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <div className="w-32 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 text-zinc-600 dark:text-zinc-400 truncate">
+                                                                    <div className="flex items-center h-full w-full" onClick={(e) => e.stopPropagation()}>
+                                                                        <Select 
+                                                                            value={req.reportedBy && data.users.find(u => u.id === req.reportedBy || u.name === req.reportedBy) ? (data.users.find(u => u.id === req.reportedBy || u.name === req.reportedBy)?.id ?? 'unassigned') : 'unassigned'} 
+                                                                            onValueChange={(val) => actions.updateRequirement(req.id, { reportedBy: val === 'unassigned' ? undefined : val })}
+                                                                        >
+                                                                            <SelectTrigger className="h-full w-full p-0 border-none shadow-none bg-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/10 focus:ring-0 flex items-center overflow-hidden [&>svg:last-child]:hidden">
+                                                                                {(() => {
+                                                                                    const reporter = data.users.find(u => u.id === req.reportedBy || u.name === req.reportedBy);
+                                                                                    if (reporter) {
+                                                                                        return (
+                                                                                            <div className="flex items-center gap-2 pointer-events-none">
+                                                                                                <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold shrink-0">
+                                                                                                    {reporter.name.charAt(0)}
+                                                                                                </div>
+                                                                                                <span className="text-sm truncate">{reporter.name}</span>
+                                                                                            </div>
+                                                                                        );
+                                                                                    }
+                                                                                    return <span className="text-zinc-400 italic pointer-events-none text-sm">{req.reportedBy || '-'}</span>;
+                                                                                })()}
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                <SelectItem value="unassigned" className="text-zinc-400 italic">Unassigned</SelectItem>
+                                                                                {data.users.map(u => (
+                                                                                    <SelectItem key={u.id} value={u.id}>
+                                                                                        <div className="flex items-center gap-2">
+                                                                                            <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold border border-primary/20">
+                                                                                                {u.name.charAt(0)}
+                                                                                            </div>
+                                                                                            {u.name}
+                                                                                        </div>
+                                                                                    </SelectItem>
+                                                                                ))}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-28 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 text-center">
+                                                                    {req.comments && req.comments.length > 0 ? (
+                                                                        <button 
+                                                                            onClick={(e) => { e.stopPropagation(); setEditingRequirement(req); setEditingRequirementTab('comments'); setIsModalOpen(true); }}
+                                                                            className="inline-flex items-center gap-1 text-zinc-400 hover:text-primary hover:bg-primary/5 px-2 py-1 rounded-md transition-colors"
+                                                                        >
+                                                                            <MessageSquare size={12} /> {req.comments.length}
+                                                                        </button>
+                                                                    ) : (
+                                                                        <button 
+                                                                            onClick={(e) => { e.stopPropagation(); setEditingRequirement(req); setEditingRequirementTab('comments'); setIsModalOpen(true); }}
+                                                                            className="text-zinc-300 hover:text-zinc-500 transition-colors"
+                                                                        >
+                                                                            -
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                                <div className="w-24 shrink-0 p-1.5 flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <Tooltip content="Edit Requirement" side="top">
+                                                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground" onClick={() => { setEditingRequirement(req); setEditingRequirementTab('details'); setIsModalOpen(true); }}>
+                                                                            <Pencil size={12} />
+                                                                        </Button>
+                                                                    </Tooltip>
+                                                                    <Tooltip content="Promote to Ticket" side="top">
+                                                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-green-600" onClick={() => openConfirm('approve', req.id)}>
+                                                                            <ArrowRight size={12} />
+                                                                        </Button>
+                                                                    </Tooltip>
+                                                                    <Tooltip content="Delete Requirement" side="top">
+                                                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-red-600" onClick={() => openConfirm('delete', req.id)}>
+                                                                            <Plus className="rotate-45" size={12} />
+                                                                        </Button>
+                                                                    </Tooltip>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <AnimatePresence>
+                                                                {isExpanded && req.description && (
+                                                                    <motion.div
+                                                                        initial={{ height: 0, opacity: 0 }}
+                                                                        animate={{ height: 'auto', opacity: 1 }}
+                                                                        exit={{ height: 0, opacity: 0 }}
+                                                                        transition={{ duration: 0.2 }}
+                                                                        className="overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/30 border-t border-zinc-100 dark:border-zinc-800"
+                                                                    >
+                                                                        <div className="p-3 pl-20 text-sm text-zinc-600 dark:text-zinc-400">
+                                                                            <div className="font-semibold text-xs uppercase text-zinc-400 mb-1 flex items-center gap-1">
+                                                                                <ClipboardList size={12} /> Description
+                                                                            </div>
+                                                                            {req.description}
+                                                                        </div>
+                                                                    </motion.div>
+                                                                )}
+                                                            </AnimatePresence>
+                                                        </div>
+                                                    )}
+                                                </Draggable>
+                                                );
+                                            })}
+                                            {provided.placeholder}
                                         </div>
-                                        <div className="flex-1 min-w-[300px] border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 font-medium text-zinc-700 dark:text-zinc-200 truncate cursor-pointer hover:underline" onClick={() => { setEditingRequirement(req); setEditingRequirementTab('details'); setIsModalOpen(true); }}>
-                                            <Tooltip content={req.title} className="max-w-[400px] whitespace-normal">
-                                                {req.title}
-                                            </Tooltip>
-                                        </div>
-                                        <div className="w-24 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 capitalize text-zinc-500">
-                                            {req.category}
-                                        </div>
-                                        <div className="w-24 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3">
-                                            <Badge variant={req.priority === 'critical' ? 'destructive' : req.priority === 'high' ? 'destructive' : req.priority === 'medium' ? 'secondary' : 'outline'} className={`rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase transition-colors ${req.priority === 'critical' ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 border-red-500' : ''}`}>
-                                                {req.priority}
-                                            </Badge>
-                                        </div>
-                                        <div className="w-32 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 text-zinc-600 dark:text-zinc-400 truncate" title={orgsTooltip}>
-                                            {orgsDisplay}
-                                        </div>
-                                        <div className="w-32 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 pl-3 text-zinc-600 dark:text-zinc-400 truncate">
-                                            {req.reportedBy || '-'}
-                                        </div>
-                                        <div className="w-28 shrink-0 border-r border-zinc-100 dark:border-zinc-800 p-2 text-center">
-                                            {req.comments && req.comments.length > 0 ? (
-                                                <button 
-                                                    onClick={(e) => { e.stopPropagation(); setEditingRequirement(req); setEditingRequirementTab('comments'); setIsModalOpen(true); }}
-                                                    className="inline-flex items-center gap-1 text-zinc-400 hover:text-primary hover:bg-primary/5 px-2 py-1 rounded-md transition-colors"
-                                                >
-                                                    <MessageSquare size={12} /> {req.comments.length}
-                                                </button>
-                                            ) : (
-                                                <button 
-                                                    onClick={(e) => { e.stopPropagation(); setEditingRequirement(req); setEditingRequirementTab('comments'); setIsModalOpen(true); }}
-                                                    className="text-zinc-300 hover:text-zinc-500 transition-colors"
-                                                >
-                                                    -
-                                                </button>
-                                            )}
-                                        </div>
-                                        <div className="w-24 shrink-0 p-1.5 flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Tooltip content="Edit Requirement" side="top">
-                                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground" onClick={() => { setEditingRequirement(req); setEditingRequirementTab('details'); setIsModalOpen(true); }}>
-                                                    <Pencil size={12} />
-                                                </Button>
-                                            </Tooltip>
-                                            <Tooltip content="Promote to Ticket" side="top">
-                                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-green-600" onClick={() => openConfirm('approve', req.id)}>
-                                                    <ArrowRight size={12} />
-                                                </Button>
-                                            </Tooltip>
-                                            <Tooltip content="Delete Requirement" side="top">
-                                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-red-600" onClick={() => openConfirm('delete', req.id)}>
-                                                    <Plus className="rotate-45" size={12} />
-                                                </Button>
-                                            </Tooltip>
-                                        </div>
-                                    </div>
-                                    
-                                    <AnimatePresence>
-                                        {isExpanded && req.description && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: 'auto', opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                transition={{ duration: 0.2 }}
-                                                className="overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/30 border-t border-zinc-100 dark:border-zinc-800"
-                                            >
-                                                <div className="p-3 pl-20 text-sm text-zinc-600 dark:text-zinc-400">
-                                                    <div className="font-semibold text-xs uppercase text-zinc-400 mb-1 flex items-center gap-1">
-                                                        <ClipboardList size={12} /> Description
-                                                    </div>
-                                                    {req.description}
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-                                );
-                            })}
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
                         </div>
                         </div>
 

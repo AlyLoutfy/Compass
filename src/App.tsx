@@ -11,6 +11,7 @@ import { BacklogPage } from './pages/BacklogPage';
 import { DesignDecisionsPage } from './pages/DesignDecisionsPage';
 import { OrganizationsPage } from './pages/OrganizationsPage';
 import { TeamBoard } from './pages/TeamBoard';
+import { BugsPage } from './pages/BugsPage';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
             <Route path="/sprints" element={<BacklogPage />} />
             <Route path="/tickets" element={<TicketsBoard />} />
             <Route path="/requirements" element={<RequirementsPage />} />
+            <Route path="/bugs" element={<BugsPage />} />
             <Route path="/qa" element={<QAPage />} />
             <Route path="/releases" element={<ReleaseLog />} />
             <Route path="/users" element={<UsersPage />} />
