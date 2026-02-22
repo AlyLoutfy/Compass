@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { DataProvider } from './context/DataContext';
+import { LinearProvider } from './context/LinearContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { IdeasBoard } from './pages/IdeasBoard';
 import { TicketsBoard } from './pages/TicketsBoard';
@@ -16,24 +17,26 @@ import { BugsPage } from './pages/BugsPage';
 function App() {
   return (
     <DataProvider>
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<TeamBoard />} />
-            <Route path="/ideas" element={<IdeasBoard />} />
-            <Route path="/sprints" element={<BacklogPage />} />
-            <Route path="/tickets" element={<TicketsBoard />} />
-            <Route path="/requirements" element={<RequirementsPage />} />
-            <Route path="/bugs" element={<BugsPage />} />
-            <Route path="/qa" element={<QAPage />} />
-            <Route path="/releases" element={<ReleaseLog />} />
-            <Route path="/users" element={<UsersPage />} />
-            <Route path="/design" element={<DesignDecisionsPage />} />
-            <Route path="/organizations" element={<OrganizationsPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </AppLayout>
-      </BrowserRouter>
+      <LinearProvider>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <AppLayout>
+            <Routes>
+              <Route path="/" element={<TeamBoard />} />
+              <Route path="/ideas" element={<IdeasBoard />} />
+              <Route path="/sprints" element={<BacklogPage />} />
+              <Route path="/tickets" element={<TicketsBoard />} />
+              <Route path="/requirements" element={<RequirementsPage />} />
+              <Route path="/bugs" element={<BugsPage />} />
+              <Route path="/qa" element={<QAPage />} />
+              <Route path="/releases" element={<ReleaseLog />} />
+              <Route path="/users" element={<UsersPage />} />
+              <Route path="/design" element={<DesignDecisionsPage />} />
+              <Route path="/organizations" element={<OrganizationsPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </AppLayout>
+        </BrowserRouter>
+      </LinearProvider>
     </DataProvider>
   );
 }

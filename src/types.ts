@@ -83,17 +83,6 @@ export interface Sprint {
 }
 
 
-// ... existing code ...
-export interface Sprint {
-  id: string;
-  name: string;
-  status: 'active' | 'completed' | 'planned';
-  startDate: number;
-  endDate: number;
-  createdAt: number;
-}
-
-
 // --- BUG TRACKER TYPES ---
 
 export type BugSeverity = 'blocker' | 'critical' | 'major' | 'minor' | 'cosmetic';

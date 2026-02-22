@@ -1,6 +1,6 @@
-import { CompassData } from '../types';
+import { CompassData } from "../types";
 
-const STORAGE_KEY = 'compass_db';
+const STORAGE_KEY = "compass_db";
 
 const INITIAL_DATA: CompassData = {
   ideas: [],
@@ -11,10 +11,11 @@ const INITIAL_DATA: CompassData = {
   users: [],
   organizations: [],
   standupHistory: [],
-  notifications: []
+  notifications: [],
+  bugs: [],
 };
 
-// Helper: Simulate delay for realistic feeling ?? No, local should be instant. 
+// Helper: Simulate delay for realistic feeling ?? No, local should be instant.
 // But we might want async signature to make Supabase swap easiest later.
 // Let's stick to synchronous local storage for simplicity unless we want to "Await" everything.
 // Better to make them async Promises now to future-proof completely.
@@ -38,11 +39,11 @@ export const storage = {
       console.error("Failed to save data", e);
     }
   },
-  
+
   // Future proofing methods (can be replaced by API calls later)
   async fetchAll(): Promise<CompassData> {
     return new Promise((resolve) => {
-      // Small artificial delay to prove "loading" states in UI if we want? 
+      // Small artificial delay to prove "loading" states in UI if we want?
       // Nah, let's keep it snappy.
       resolve(this.getData());
     });
@@ -53,5 +54,5 @@ export const storage = {
       this.saveData(data);
       resolve();
     });
-  }
+  },
 };
